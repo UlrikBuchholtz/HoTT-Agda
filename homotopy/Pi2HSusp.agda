@@ -113,9 +113,7 @@ module Pi2HSusp {i} (A : Type i) (gA : has-level ⟨ 1 ⟩ A)
   decode {x} = Suspension-elim A {P = λ x → Codes x → P x}
                  decode'
                  (λ a → [ merid A a ])
-                 (λ a → coe (↓-→-is-square {B = Codes} {C = P} 
-                               decode' (λ a → [ merid A a ]) _)
-                            (λ= $ STS a))
+                 (λ a → ↓-→-from-transp (λ= $ STS a))
                  x
     where 
     abstract
@@ -138,7 +136,7 @@ module Pi2HSusp {i} (A : Type i) (gA : has-level ⟨ 1 ⟩ A)
     decode-encode : {x : Suspension A} (tα : P x) 
       → decode {x} (encode {x} tα) == tα
     decode-encode {x} = Trunc-elim 
-      {B = λ tα → decode {x} (encode {x} tα) == tα}
+      {P = λ tα → decode {x} (encode {x} tα) == tα}
       (λ _ → =-preserves-level ⟨ 1 ⟩ Trunc-level)
       (J (λ y p → decode {y} (encode {y} [ p ]) == [ p ])
          (ap [_] (!-inv-r (merid A e))))
@@ -179,8 +177,8 @@ module Pi2HSusp {i} (A : Type i) (gA : has-level ⟨ 1 ⟩ A)
 
   abstract
     main-lemma-iso : ⦃ p1 : 1 ≠ 0 ⦄ → 
-         Ω^-group 1 ⦃ p1 ⦄ (Ptd-Trunc ⟨ 1 ⟩ (Ptd-Ω (Ptd-Susp (A , e)))) Trunc-level
-      == Ω^-group 1 ⦃ p1 ⦄ (Ptd-Trunc ⟨ 1 ⟩ (A , e)) Trunc-level
+         Ω^-Group 1 ⦃ p1 ⦄ (Ptd-Trunc ⟨ 1 ⟩ (Ptd-Ω (Ptd-Susp (A , e)))) Trunc-level
+      == Ω^-Group 1 ⦃ p1 ⦄ (Ptd-Trunc ⟨ 1 ⟩ (A , e)) Trunc-level
     main-lemma-iso = group-iso 
       (record {f = f; pres-ident = pres-ident; pres-comp = pres-comp})
       ie 
@@ -194,8 +192,8 @@ module Pi2HSusp {i} (A : Type i) (gA : has-level ⟨ 1 ⟩ A)
         =⟨ π-inner-iso 1 ⦃ p1 ⦄ ⦃ p2 ⦄ (Ptd-Susp (A , e)) ⟩
       π 1 ⦃ p1 ⦄ (Ptd-Ω (Ptd-Susp (A , e)))
         =⟨ ! (π-Trunc-shift-iso 1 ⦃ p1 ⦄ (Ptd-Ω (Ptd-Susp (A , e)))) ⟩
-      Ω^-group 1 ⦃ p1 ⦄ (Ptd-Trunc ⟨ 1 ⟩ (Ptd-Ω (Ptd-Susp (A , e)))) Trunc-level
+      Ω^-Group 1 ⦃ p1 ⦄ (Ptd-Trunc ⟨ 1 ⟩ (Ptd-Ω (Ptd-Susp (A , e)))) Trunc-level
         =⟨ main-lemma-iso ⦃ p1 ⦄ ⟩
-      Ω^-group 1 ⦃ p1 ⦄ (Ptd-Trunc ⟨ 1 ⟩ (A , e)) Trunc-level
+      Ω^-Group 1 ⦃ p1 ⦄ (Ptd-Trunc ⟨ 1 ⟩ (A , e)) Trunc-level
         =⟨ π-Trunc-shift-iso 1 ⦃ p1 ⦄ (A , e) ⟩
       π 1 ⦃ p1 ⦄ (A , e) ∎

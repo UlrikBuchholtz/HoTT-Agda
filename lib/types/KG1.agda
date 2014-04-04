@@ -12,14 +12,13 @@ open import lib.types.Truncation
 open import lib.types.Group
 open import lib.types.Pointed
 open import lib.types.LoopSpace
-open import lib.types.HomotopyGroup
+open import lib.groups.HomotopyGroup
 
 module lib.types.KG1 where
 
 module KG1 {i} (G : Group i) where
 
   open Group G
-  open GroupStructure group-struct
 
   private
     data #KG1-aux : Type i where
@@ -46,7 +45,7 @@ module KG1 {i} (G : Group i) where
   module KG1Rec {j} {C : Type j}
     (C-level : has-level ⟨ 1 ⟩ C)
     (kbase* : C) 
-    (hom* : GroupHom G (Ω^-group 1 (C , kbase*) C-level)) where
+    (hom* : GroupHom G (Ω^-Group 1 (C , kbase*) C-level)) where
 
     f : KG1 → C
     f (#kg1 #kbase _) = kbase*
@@ -56,18 +55,18 @@ module KG1 {i} (G : Group i) where
 
   open KG1Rec public using () renaming (f to KG1-rec)
 
-  module KG1Elim {j} {C : KG1 → Type j}
-    (C-level : (x : KG1) → has-level ⟨ 1 ⟩ (C x))
-    (kbase* : C kbase)
-    (kloop* : (g : El) → kbase* == kbase* [ C ↓ kloop g ])
+  module KG1Elim {j} {P : KG1 → Type j}
+    (P-level : (x : KG1) → has-level ⟨ 1 ⟩ (P x))
+    (kbase* : P kbase)
+    (kloop* : (g : El) → kbase* == kbase* [ P ↓ kloop g ])
     (preserves-ident : kloop* ident == idp
-       [ (λ p → kbase* == kbase* [ C ↓ p ]) ↓ kloop-ident ])
+       [ (λ p → kbase* == kbase* [ P ↓ p ]) ↓ kloop-ident ])
     (preserves-comp : (g₁ g₂ : El) → 
        kloop* (comp g₁ g₂) == kloop* g₁ ∙ᵈ kloop* g₂
-       [ (λ p → kbase* == kbase* [ C ↓ p ]) ↓ kloop-comp g₁ g₂ ])
+       [ (λ p → kbase* == kbase* [ P ↓ p ]) ↓ kloop-comp g₁ g₂ ])
     where
 
-    f : Π KG1 C
+    f : Π KG1 P
     f (#kg1 #kbase _) = kbase*
 
     postulate  -- HIT
@@ -96,53 +95,64 @@ module KG1 {i} (G : Group i) where
     comp-equiv-id : comp-equiv ident == ide El
     comp-equiv-id = 
       pair= (λ= unitr) 
-        (prop-has-all-paths-↓ {B = is-equiv} (is-equiv-is-prop $ idf El))
+            (prop-has-all-paths-↓ {B = is-equiv} (is-equiv-is-prop $ idf El))
 
     comp-equiv-comp : (g₁ g₂ : El) → comp-equiv (comp g₁ g₂)
                       == (comp-equiv g₂ ∘e comp-equiv g₁)
     comp-equiv-comp g₁ g₂ = 
-     pair= (λ= (λ x → ! (assoc x g₁ g₂)))
-        (prop-has-all-paths-↓ {B = is-equiv} (is-equiv-is-prop _)) 
+      pair= (λ= (λ x → ! (assoc x g₁ g₂)))
+            (prop-has-all-paths-↓ {B = is-equiv} (is-equiv-is-prop _)) 
 
+    Ω-Group : Group (lsucc i)
+    Ω-Group = group (El == El) (universe-=-level El-level El-level)
+                     (Ω^-group-structure 1 (Type i , El))
 
-    Codes-hom : GroupHom 
-      G 
-      (Ω^-group 1 ((⟨0⟩ -Type i) , (El , El-level)) (⟨0⟩ -Type-level i))
-    Codes-hom = record {f = f; pres-ident = pri; pres-comp = prc}
-      where 
-        -- saving some space
-        phap : {p : El == El}
-          → El-level == El-level [ has-level ⟨0⟩ ↓ p ]
-        phap = prop-has-all-paths-↓ has-level-is-prop
+    0-Group : Group (lsucc i)
+    0-Group = Ω^-Group 1 ((⟨0⟩ -Type i) , (El , El-level)) (⟨0⟩ -Type-level i)
 
-        f : (g : El) → (El , El-level) == (El , El-level)
-        f g = pair= (ua $ comp-equiv g) phap
+    Codes-hom₁ : GroupHom G Ω-Group
+    Codes-hom₁ = record {f = f; pres-ident = pri; pres-comp = prc}
+      where
+      f : El → El == El
+      f = ua ∘ comp-equiv
 
-        abstract
-          pri : f ident == idp
-          pri = 
-            pair= (ua $ comp-equiv ident) phap
-              =⟨ ap ua comp-equiv-id ∙ ua-η idp |in-ctx (λ w → pair= w phap) ⟩ 
-            pair= idp phap
-              =⟨ prop-has-all-paths (=-preserves-level _ has-level-is-prop) _ _
-                |in-ctx (λ w → pair= idp w) ⟩
-            pair= idp idp
-              =⟨ idp ⟩
-            idp ∎
+      pri : f ident == idp
+      pri = ap ua comp-equiv-id ∙ ua-η idp
 
-          prc : (g₁ g₂ : El) → f (comp g₁ g₂) == f g₁ ∙ f g₂
-          prc g₁ g₂ = 
-            pair= (ua $ comp-equiv (comp g₁ g₂)) phap
-              =⟨ ap ua (comp-equiv-comp g₁ g₂) |in-ctx (λ w → pair= w phap) ⟩ 
-            pair= (ua $ comp-equiv g₂ ∘e comp-equiv g₁) phap
-              =⟨ ua-∘e (comp-equiv g₁) (comp-equiv g₂) |in-ctx (λ w → pair= w phap) ⟩
-            pair= (ua (comp-equiv g₁) ∙ ua (comp-equiv g₂)) phap
-              =⟨ prop-has-all-paths (↓-level (λ _ → raise-level _ has-level-is-prop)) _ _
-                |in-ctx (λ w → pair= (ua (comp-equiv g₁) ∙ ua (comp-equiv g₂)) w) ⟩
-            pair= (ua (comp-equiv g₁) ∙ ua (comp-equiv g₂)) 
-                  (phap {ua (comp-equiv g₁)} ∙ᵈ phap {ua (comp-equiv g₂)})
-              =⟨ ! (Σ-∙ (phap {p = ua $ comp-equiv g₁}) (phap {p = ua $ comp-equiv g₂})) ⟩
-            pair= (ua $ comp-equiv g₁) phap ∙ pair= (ua $ comp-equiv g₂) phap ∎
+      prc : (g₁ g₂ : El) → f (comp g₁ g₂) == f g₁ ∙ f g₂
+      prc g₁ g₂ =
+        ua (comp-equiv (comp g₁ g₂))
+          =⟨ ap ua (comp-equiv-comp g₁ g₂) ⟩
+        ua (comp-equiv g₂ ∘e comp-equiv g₁)
+          =⟨ ua-∘e (comp-equiv g₁) (comp-equiv g₂) ⟩
+        ua (comp-equiv g₁) ∙ ua (comp-equiv g₂) ∎
+
+    Codes-hom₂ : GroupHom Ω-Group 0-Group
+    Codes-hom₂ = record {f = f; pres-ident = pri; pres-comp = prc}
+      where
+      -- saving some space
+      phap : {p : El == El}
+        → El-level == El-level [ has-level ⟨0⟩ ↓ p ]
+      phap = prop-has-all-paths-↓ has-level-is-prop
+
+      f : El == El → (El , El-level) == (El , El-level)
+      f p = pair= p phap
+      
+      pri : f idp == idp
+      pri = ap (pair= idp) (contr-has-all-paths (has-level-is-prop _ _) _ _)
+
+      prc : (p₁ p₂ : El == El) → f (p₁ ∙ p₂) == f p₁ ∙ f p₂
+      prc p₁ p₂ = 
+        pair= (p₁ ∙ p₂) phap
+          =⟨ prop-has-all-paths (↓-level (λ _ → 
+                                   raise-level _ has-level-is-prop)) _ _
+              |in-ctx (λ w → pair= (p₁ ∙ p₂)  w) ⟩
+        pair= (p₁ ∙ p₂) (phap {p₁} ∙ᵈ phap {p₂})
+          =⟨ ! (Σ-∙ (phap {p₁}) (phap {p₂})) ⟩
+        f p₁ ∙ f p₂ ∎
+
+    Codes-hom : GroupHom G 0-Group
+    Codes-hom = Codes-hom₂ ∘hom Codes-hom₁
 
     Codes : KG1 → ⟨0⟩ -Type i 
     Codes = KG1-rec {C = ⟨0⟩ -Type i} (⟨0⟩ -Type-level i)
@@ -161,21 +171,21 @@ module KG1 {i} (G : Group i) where
                   (! (fst=-β (ua $ comp-equiv g) _)) $
         ↓-idf-ua-in (comp-equiv g) idp
 
+    
     decode' : El → kbase == kbase
     decode' = kloop
 
     encode : {x : KG1} → kbase == x → fst (Codes x)
     encode α = transport (fst ∘ Codes) α ident
 
-    abstract
-      encode-decode' : ∀ g → encode (decode' g) == g
-      encode-decode' g = to-transp $
-        transport (λ x → ident == x [ fst ∘ Codes ↓ kloop g ])
-                   (unitl g) (↓-Codes-loop g ident)
+    encode-decode' : ∀ g → encode (decode' g) == g
+    encode-decode' g = to-transp $
+      transport (λ x → ident == x [ fst ∘ Codes ↓ kloop g ])
+                 (unitl g) (↓-Codes-loop g ident)
 
     decode : {x : KG1} → fst (Codes x) → kbase == x
     decode {x} = 
-      KG1-elim {C = λ x' → fst (Codes x') → kbase == x'}
+      KG1-elim {P = λ x' → fst (Codes x') → kbase == x'}
         (λ _ → Π-level (λ _ → =-preserves-level _ klevel))
         decode'
         loop'
@@ -185,42 +195,46 @@ module KG1 {i} (G : Group i) where
       where 
       loop' : (g : El) 
         → decode' == decode' [ (λ x' → fst (Codes x') → kbase == x') ↓ kloop g ]
-      loop' g = coe (↓-→-is-square {B = fst ∘ Codes} {C = Path kbase}
-                  decode' decode' (kloop g)) $ λ= $ λ y → 
-                    transport (λ z → kbase == z) (kloop g) (kloop y)
-                      =⟨ trans-pathfrom (kloop g) (kloop y) ⟩
-                    kloop y ∙ kloop g
-                      =⟨ ! (kloop-comp y g) ⟩
-                    kloop (comp y g)
-                      =⟨ ap kloop (! (to-transp (↓-Codes-loop g y))) ⟩
-                    kloop (transport (λ z → fst (Codes z)) (kloop g) y) ∎
+      loop' g = ↓-→-from-transp $ λ= $ λ y →
+        transport (λ z → kbase == z) (kloop g) (kloop y)
+          =⟨ trans-pathfrom (kloop g) (kloop y) ⟩
+        kloop y ∙ kloop g
+          =⟨ ! (kloop-comp y g) ⟩
+        kloop (comp y g)
+          =⟨ ap kloop (! (to-transp (↓-Codes-loop g y))) ⟩
+        kloop (transport (λ z → fst (Codes z)) (kloop g) y) ∎
 
     decode-encode : ∀ {x} (α : kbase == x) → decode (encode α) == α
-    decode-encode α = J (λ (x : KG1) (α : kbase == x) → decode (encode α) == α) kloop-ident α
+    decode-encode α = 
+      J (λ (x : KG1) (α : kbase == x) → decode (encode α) == α) kloop-ident α
 
-    Ω¹-equiv : (kbase == kbase) ≃ El
-    Ω¹-equiv = equiv encode decode encode-decode' decode-encode
+    abstract
+      Ω¹-equiv : (kbase == kbase) ≃ El
+      Ω¹-equiv = equiv encode decode' encode-decode' decode-encode
 
-    Ω¹-path : (kbase == kbase) == El
-    Ω¹-path = ua Ω¹-equiv
+    abstract
+      Ω¹-path : (kbase == kbase) == El
+      Ω¹-path = ua Ω¹-equiv
 
-    π₁-path : Trunc ⟨0⟩ (kbase == kbase) == El
-    π₁-path = ap (Trunc ⟨0⟩) Ω¹-path ∙ ua (unTrunc-equiv El El-level)
-
-    π₁-iso : ⦃ p1 : 1 ≠ 0 ⦄ → π 1 ⦃ p1 ⦄ (KG1 , kbase) == G
-    π₁-iso ⦃ p1 ⦄ = transport (λ pi → pi 1 ⦃ p1 ⦄ Ptd-KG1 == G) π-fold $ ! $
-      group-iso 
-      (record { f = [_] ∘ decode';
-                pres-ident = ap [_] kloop-ident; 
-                pres-comp = λ g₁ g₂ → ap [_] (kloop-comp g₁ g₂) }) 
-      (snd ((unTrunc-equiv (kbase == kbase) (klevel _ _))⁻¹ ∘e (Ω¹-equiv ⁻¹)))
+    abstract
+      π₁-path : Trunc ⟨0⟩ (kbase == kbase) == El
+      π₁-path = ap (Trunc ⟨0⟩) Ω¹-path ∙ ua (unTrunc-equiv El El-level)
+    
+    abstract
+      π₁-iso : ⦃ p1 : 1 ≠ 0 ⦄ → π 1 ⦃ p1 ⦄ (KG1 , kbase) == G
+      π₁-iso ⦃ p1 ⦄ = transport (λ pi → pi 1 ⦃ p1 ⦄ Ptd-KG1 == G) π-fold $ ! $
+        group-iso 
+        (record { f = [_] ∘ decode';
+                  pres-ident = ap [_] kloop-ident; 
+                  pres-comp = λ g₁ g₂ → ap [_] (kloop-comp g₁ g₂) }) 
+        (snd ((unTrunc-equiv (kbase == kbase) (klevel _ _))⁻¹ ∘e (Ω¹-equiv ⁻¹)))
 
   {- KG1 is 0-connected -}
   abstract
     KG1-conn : is-connected ⟨0⟩ KG1
     KG1-conn = ([ kbase ] , Trunc-elim (λ _ → =-preserves-level _ Trunc-level)
       (KG1-elim
-        {C = λ x → [ kbase ] == [ x ]}
+        {P = λ x → [ kbase ] == [ x ]}
         (λ _ → raise-level _ (=-preserves-level _ Trunc-level))
         idp
         (λ _ → prop-has-all-paths-↓ (Trunc-level {n = ⟨0⟩} _ _))

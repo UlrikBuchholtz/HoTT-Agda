@@ -3,16 +3,7 @@
 open import HoTT
 open import homotopy.Freudenthal
 
-module homotopy.IteratedSuspension where
-
-Ptd-Susp^ : ∀ {i} (n : ℕ) → Ptd i → Ptd i
-Ptd-Susp^ O X = X
-Ptd-Susp^ (S n) X = Ptd-Susp (Ptd-Susp^ n X)
-
-Ptd-Susp^-conn : ∀ {i} (n : ℕ) {X : Ptd i} {m : ℕ₋₂}
-  → is-connected m (fst X) → is-connected ((n -2) +2+ m) (fst (Ptd-Susp^ n X))
-Ptd-Susp^-conn O cX = cX
-Ptd-Susp^-conn (S n) cX = Susp-conn (Ptd-Susp^-conn n cX)
+module homotopy.IterSuspensionStable where
 
 {- π (S k) (Ptd-Susp^ (S n) X) == π k (Ptd-Susp^ n X), where k = S k' 
    Susp^Stable below uses instance arguments instead of proving for S k' -}
@@ -27,7 +18,7 @@ module Susp^StableSucc {i} (X : Ptd i) (cX : is-connected ⟨0⟩ (fst X))
   private
     kle' : ⟨ k ⟩ ≤T S ((n -2) +2+ S (n -2))
     kle' = ≤T-trans (⟨⟩-monotone-≤ kle) (inl (lemma n))
-      where lemma : (n : ℕ) → ⟨ n *2 ⟩ == S ((n -2) +2+ S n -2)
+      where lemma : (n : ℕ) → ⟨ n *2 ⟩ == S ((n -2) +2+ S (n -2))
             lemma O = idp
             lemma (S n') = ap S (ap S (lemma n') 
                                  ∙ ! (+2+-βr (S n' -2) (S n' -2)))
@@ -53,9 +44,9 @@ module Susp^StableSucc {i} (X : Ptd i) (cX : is-connected ⟨0⟩ (fst X))
       =⟨ π-inner-iso k ⦃ pk ⦄ ⦃ psk ⦄ (Ptd-Susp^ (S n) X) ⟩
     π k ⦃ pk ⦄ (Ptd-Ω (Ptd-Susp^ (S n) X)) 
       =⟨ ! (π-Trunc-shift-iso k ⦃ pk ⦄ (Ptd-Ω (Ptd-Susp^ (S n) X))) ⟩
-    Ω^-group k ⦃ pk ⦄ (Ptd-Trunc ⟨ k ⟩ (Ptd-Ω (Ptd-Susp^ (S n) X))) Trunc-level
+    Ω^-Group k ⦃ pk ⦄ (Ptd-Trunc ⟨ k ⟩ (Ptd-Ω (Ptd-Susp^ (S n) X))) Trunc-level
       =⟨ ! F.iso ⟩
-    Ω^-group k ⦃ pk ⦄ (Ptd-Trunc ⟨ k ⟩ (Ptd-Susp^ n X)) Trunc-level
+    Ω^-Group k ⦃ pk ⦄ (Ptd-Trunc ⟨ k ⟩ (Ptd-Susp^ n X)) Trunc-level
       =⟨ π-Trunc-shift-iso k ⦃ pk ⦄ (Ptd-Susp^ n X) ⟩
     π k ⦃ pk ⦄ (Ptd-Susp^ n X) ∎
 

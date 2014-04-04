@@ -127,8 +127,9 @@ module FreudenthalEquiv
   decode {x} = Suspension-elim X 
     {P = λ y → Codes y → Q y}
     decodeN decodeS
-    (λ x' → coe (↓-→-is-square {B = Codes} {C = Q} 
-                   decodeN decodeS (merid X x')) (λ= (STS x')))
+    (λ x' → ↓-→-from-transp (λ= (STS x')))
+    -- (λ x' → coe (↓-→-is-square {B = Codes} {C = Q} 
+    --                decodeN decodeS (merid X x')) (λ= (STS x')))
     x
     where
     abstract
@@ -218,7 +219,7 @@ module FreudenthalEquiv
   decode-encode : {x : Suspension X} (tα : Q x) 
     → decode {x} (encode {x} tα) == tα
   decode-encode {x} tα = Trunc-elim 
-    {B = λ tα → decode {x} (encode {x} tα) == tα}
+    {P = λ tα → decode {x} (encode {x} tα) == tα}
     (λ _ → =-preserves-level k Trunc-level)
     (J (λ y p → decode {y} (encode {y} [ p ]) == [ p ]) 
        (ap [_] (!-inv-r (merid X x₀))))
@@ -241,16 +242,16 @@ module FreudenthalIso
   open FreudenthalEquiv n (⟨ k ⟩) kle (fst X) (snd X) cX public
 
   hom : GroupHom 
-    (Ω^-group k (Ptd-Trunc ⟨ k ⟩ X) Trunc-level)
-    (Ω^-group k (Ptd-Trunc ⟨ k ⟩ (Ptd-Ω (Ptd-Susp X))) Trunc-level)
+    (Ω^-Group k (Ptd-Trunc ⟨ k ⟩ X) Trunc-level)
+    (Ω^-Group k (Ptd-Trunc ⟨ k ⟩ (Ptd-Ω (Ptd-Susp X))) Trunc-level)
   hom = record { 
     f = fst F;
     pres-ident = snd F;
     pres-comp = ap^-conc^ k (decodeN , decodeN-pt) }
     where F = ap^ k (decodeN , decodeN-pt)
 
-  iso : Ω^-group k (Ptd-Trunc ⟨ k ⟩ X) Trunc-level
-     == Ω^-group k (Ptd-Trunc ⟨ k ⟩ (Ptd-Ω (Ptd-Susp X))) Trunc-level
+  iso : Ω^-Group k (Ptd-Trunc ⟨ k ⟩ X) Trunc-level
+     == Ω^-Group k (Ptd-Trunc ⟨ k ⟩ (Ptd-Ω (Ptd-Susp X))) Trunc-level
   iso = group-iso hom (is-equiv-ap^ k (decodeN , decodeN-pt) (snd eqv))
 
   

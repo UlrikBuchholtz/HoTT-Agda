@@ -5,12 +5,12 @@ open import lib.types.Group
 open import lib.types.Pi
 open import lib.types.Truncation
 
-module lib.types.TruncationGroup where
+module lib.groups.TruncationGroup where
 
 module _ {i} {El : Type i} (GS : GroupStructure El) where
 
-  Trunc-group-structure : GroupStructure (Trunc ⟨0⟩ El)
-  Trunc-group-structure = record {
+  Trunc-group-struct : GroupStructure (Trunc ⟨0⟩ El)
+  Trunc-group-struct = record {
     ident = [ ident GS ];
     inv = Trunc-fmap (inv GS);
     comp = Trunc-fmap2 (comp GS);
@@ -35,4 +35,4 @@ module _ {i} {El : Type i} (GS : GroupStructure El) where
   Trunc-Group = record { 
     El = Trunc ⟨0⟩ El; 
     El-level = Trunc-level;
-    group-struct = Trunc-group-structure }
+    group-struct = Trunc-group-struct }
