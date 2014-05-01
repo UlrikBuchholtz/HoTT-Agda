@@ -19,23 +19,23 @@ to = To.f
 
 {- From -}
 
+from-bool : Bool → Suspension A
+from-bool false = north A
+from-bool true = south A
+
+from-glue : (c : Bool × A) → from-bool (fst c) == south A
+from-glue (false , a) = merid A a
+from-glue (true , a) = idp
+
+module From = PushoutRec {d = *-span Bool A} from-bool (λ _ → south A) from-glue
+
 from : Bool * A → Suspension A
-from = From.f  module _ where
-
-  from-bool : Bool → Suspension A
-  from-bool false = north A
-  from-bool true = south A
-
-  from-glue : (c : Bool × A) → from-bool (fst c) == south A
-  from-glue (false , a) = merid A a
-  from-glue (true , a) = idp
-
-  module From = PushoutRec {d = *-span Bool A} from-bool (λ _ → south A) from-glue
+from = From.f
 
 {- ToFrom -}
-
+{- Pushout-elim to-from-left (λ a → glue (true , a)) to-from-glue -} 
 to-from : (c : Bool * A) → to (from c) == c
-to-from = Pushout-elim to-from-left (λ a → glue (true , a)) to-from-glue  where
+to-from = Pushout-elim {P = λ z → to (from z) == z} to-from-left (λ a → glue (true , a)) to-from-glue where
 
   to-from-left : (b : Bool) → to (from (left b)) == left b
   to-from-left false = idp
