@@ -1,15 +1,18 @@
 {-# OPTIONS --without-K #-}
 
 open import HoTT
-
+-- open import lib.types.PathSeq
 -- Associativity of the join (work in progress)
 
+
 module homotopy.JoinAssoc {i j k} (A : Type i) (B : Type j) (C : Type k) where
+
+
 
   {- First map -}
 
   to : (A * B) * C → A * (B * C)
-  to = To.f  module _ where
+  to = To.f  module ToM where
 
     to-left-glue : (ab : A × B) → left (fst ab) == right (left (snd ab)) :> A * (B * C)
     to-left-glue (a , b) = glue (a , left b)
@@ -74,7 +77,7 @@ module homotopy.JoinAssoc {i j k} (A : Type i) (B : Type j) (C : Type k) where
   to-from-right-glue' b c =
     ap (λ z → to (from-right z)) (glue (b , c))     =⟪ ap-∘ to from-right (glue (b , c)) ⟫
     ap to (ap from-right (glue (b , c)))            =⟪ FromRight.glue-β (b , c) |in-ctx ap to ⟫
-    ap to (glue ((right b , c) :> (A * B) × C))     =⟪ To.glue-β (right b , c)⟫
+    ap to (glue ((right b , c) :> (A * B) × C))     =⟪ ToM.To.glue-β (right b , c) ⟫
     ap right (glue (b , c)) ∎∎
 
   to-from-right-glue : (bc : B × C) → idp == idp [ (λ x → to (from (right x)) == right x) ↓ glue bc ]
@@ -89,7 +92,7 @@ module homotopy.JoinAssoc {i j k} (A : Type i) (B : Type j) (C : Type k) where
   to-from-glue-left' a b =
     ap to (ap from (glue (a , left b)))   =⟪ From.glue-β (a , left b) |in-ctx ap to ⟫
     ap to (ap left (glue (a , b)))        =⟪ ∘-ap to left (glue (a , b)) ⟫
-    ap to-left (glue (a , b))             =⟪ ToLeft.glue-β (a , b) ⟫
+    ap ToM.to-left (glue (a , b))             =⟪ ToM.ToLeft.glue-β (a , b) ⟫
     glue (a , left b) ∎∎
 
   to-from-glue-left : (a : A) (b : B) → idp == to-from-right (left b) [ (λ x → to (from x) == x) ↓ glue (a , left b) ]
@@ -98,7 +101,7 @@ module homotopy.JoinAssoc {i j k} (A : Type i) (B : Type j) (C : Type k) where
   to-from-glue-right' : (a : A) (c : C) → ap to (ap from (glue (a , right c))) =-= glue (a , right c)
   to-from-glue-right' a c =
     ap to (ap from (glue (a , right c)))   =⟪ From.glue-β (a , right c) |in-ctx ap to ⟫
-    ap to (glue (left a , c))              =⟪ To.glue-β (left a , c) ⟫
+    ap to (glue (left a , c))              =⟪ ToM.To.glue-β (left a , c) ⟫
     glue (a , right c) ∎∎
 
   to-from-glue-right : (a : A) (c : C) → idp == to-from-right (right c) [ (λ x → to (from x) == x) ↓ glue (a , right c) ]
