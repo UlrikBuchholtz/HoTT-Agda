@@ -70,18 +70,18 @@ module Assoc2 {i j k} (A : Type i) (B : Type j) (C : Type k) where
     ▹ (↯ 1! (to-from-glue-right' a c)))) ∙'2ᵈ (to-from-right-glue (b , c))
                =⟨ {!!} ⟩
 
-    ((↯ 2# (to-from-glue-left' a b)) ◃ ((↓-swap! to-left (to ∘ from-right) _ idp (ap↓ (ap to) (apd (λ x → glue (x , c)) (glue (a , b)) ▹! (FromRight.glue-β (b , c))) ▹ (ap (λ u → u) (∘-ap to from-right (glue (b , c))))))
+    ((↯ 2# (to-from-glue-left' a b)) ◃ ((↓-swap! ToM.to-left (to ∘ from-right) _ idp (ap↓ (ap to) (apd (λ x → glue (x , c)) (glue (a , b)) ▹! (FromRight.glue-β (b , c))) ▹ (ap (λ u → u) (∘-ap to from-right (glue (b , c))))))
     ▹ (↯ 1! (to-from-glue-right' a c)))) ∙'2ᵈ (to-from-right-glue (b , c))
-               =⟨ ap↓-▹! (ap to) (apd (λ x → glue (x , c)) (glue (a , b))) (FromRight.glue-β (b , c)) |in-ctx (λ v → ((↯ 2# (to-from-glue-left' a b)) ◃ ((↓-swap! to-left (to ∘ from-right) _ idp (v ▹ (ap (λ u → u) (∘-ap to from-right (glue (b , c))))))
+               =⟨ ap↓-▹! (ap to) (apd (λ x → glue (x , c)) (glue (a , b))) (FromRight.glue-β (b , c)) |in-ctx (λ v → ((↯ 2# (to-from-glue-left' a b)) ◃ ((↓-swap! ToM.to-left (to ∘ from-right) _ idp (v ▹ (ap (λ u → u) (∘-ap to from-right (glue (b , c))))))
     ▹ (↯ 1! (to-from-glue-right' a c)))) ∙'2ᵈ (to-from-right-glue (b , c))) ⟩
 
-    ((↯ 2# (to-from-glue-left' a b)) ◃ ((↓-swap! to-left (to ∘ from-right) _ idp ((ap↓ (ap to) (apd (λ x → glue (x , c)) (glue (a , b))) ▹! ap (ap to) (FromRight.glue-β (b , c))) ▹ (ap (λ u → u) (∘-ap to from-right (glue (b , c))))))
+    ((↯ 2# (to-from-glue-left' a b)) ◃ ((↓-swap! ToM.to-left (to ∘ from-right) _ idp ((ap↓ (ap to) (apd (λ x → glue (x , c)) (glue (a , b))) ▹! ap (ap to) (FromRight.glue-β (b , c))) ▹ (ap (λ u → u) (∘-ap to from-right (glue (b , c))))))
     ▹ (↯ 1! (to-from-glue-right' a c)))) ∙'2ᵈ (to-from-right-glue (b , c))
-               =⟨ ∘'-apd (ap to) (λ x → glue (x , c)) (glue (a , b)) |in-ctx (λ v → ((↯ 2# (to-from-glue-left' a b)) ◃ ((↓-swap! to-left (to ∘ from-right) _ idp ((v ▹! ap (ap to) (FromRight.glue-β (b , c))) ▹ (ap (λ u → u) (∘-ap to from-right (glue (b , c))))))
+               =⟨ ∘'-apd (ap to) (λ x → glue (x , c)) (glue (a , b)) |in-ctx (λ v → ((↯ 2# (to-from-glue-left' a b)) ◃ ((↓-swap! ToM.to-left (to ∘ from-right) _ idp ((v ▹! ap (ap to) (FromRight.glue-β (b , c))) ▹ (ap (λ u → u) (∘-ap to from-right (glue (b , c))))))
     ▹ (↯ 1! (to-from-glue-right' a c)))) ∙'2ᵈ (to-from-right-glue (b , c))) ⟩
 {- 4 -}
 
-    ((↯ 2# (to-from-glue-left' a b)) ◃ ((↓-swap! to-left (to ∘ from-right) _ idp ((apd (λ x → ap to (glue (x , c))) (glue (a , b)) ▹! ap (ap to) (FromRight.glue-β (b , c))) ▹ (ap (λ u → u) (∘-ap to from-right (glue (b , c))))))
+    ((↯ 2# (to-from-glue-left' a b)) ◃ ((↓-swap! ToM.to-left (to ∘ from-right) _ idp ((apd (λ x → ap to (glue (x , c))) (glue (a , b)) ▹! ap (ap to) (FromRight.glue-β (b , c))) ▹ (ap (λ u → u) (∘-ap to from-right (glue (b , c))))))
     ▹ (↯ 1! (to-from-glue-right' a c)))) ∙'2ᵈ (to-from-right-glue (b , c))
                =⟨ {!!} ⟩
 {- 5 -}
@@ -93,13 +93,13 @@ module Assoc2 {i j k} (A : Type i) (B : Type j) (C : Type k) where
 -- {- 5 -}
 --      (↯ 2# (to-from-glue-left' a b)) ◃ (↓-swap! to-left right _ idp (To.glue-β (left a , c) !◃ (apd (λ x → ap to (glue (x , c))) (glue (a , b)) ▹ To.glue-β (right b , c))))
 --                =⟨ {!!} ⟩
-     (↯ 2# (to-from-glue-left' a b)) ◃ (↓-swap! to-left right _ idp (apd (λ x → to-glue (x , c)) (glue (a , b))))
-               =⟨ ToGlue.glue-β c (a , b) |in-ctx (λ v → (↯ 2# (to-from-glue-left' a b)) ◃ (↓-swap! to-left right _ idp v)) ⟩
+     (↯ 2# (to-from-glue-left' a b)) ◃ (↓-swap! ToM.to-left right _ idp (apd (λ x → ToM.to-glue (x , c)) (glue (a , b))))
+               =⟨ ToM.ToGlue.glue-β c (a , b) |in-ctx (λ v → (↯ 2# (to-from-glue-left' a b)) ◃ (↓-swap! ToM.to-left right _ idp v)) ⟩
 {- 6 -}
 
-     (↯ 2# (to-from-glue-left' a b)) ◃ (↓-swap! to-left right _ idp (to-glue-glue c (a , b)))
-               =⟨ ↓-swap-β to-left right {p = glue (a , b)} (to-glue-left c a) idp (ToLeft.glue-β (a , b) ◃ apd (λ x → glue (a , x)) (glue (b , c))) |in-ctx (λ v → (↯ 2# (to-from-glue-left' a b)) ◃ v) ⟩
-     (↯ 2# (to-from-glue-left' a b)) ◃ (ToLeft.glue-β (a , b) ◃ apd (λ x → glue (a , x)) (glue (b , c)))
+     (↯ 2# (to-from-glue-left' a b)) ◃ (↓-swap! ToM.to-left right _ idp (ToM.to-glue-glue c (a , b)))
+               =⟨ ↓-swap-β ToM.to-left right {p = glue (a , b)} (ToM.to-glue-left c a) idp (ToM.ToLeft.glue-β (a , b) ◃ apd (λ x → glue (a , x)) (glue (b , c))) |in-ctx (λ v → (↯ 2# (to-from-glue-left' a b)) ◃ v) ⟩
+     (↯ 2# (to-from-glue-left' a b)) ◃ (ToM.ToLeft.glue-β (a , b) ◃ apd (λ x → glue (a , x)) (glue (b , c)))
                =⟨ {!!} ⟩ -- associativity
      (↯ to-from-glue-left' a b) ◃ apd (λ x → glue (a , x)) (glue (b , c)) ∎))
 
