@@ -115,7 +115,7 @@ module _ {i} {A : Type i} where
   #- n (a ∎∎) = a ∎∎
   #- O (a =⟪ p ⟫ s) = #- O s
   #- (S n)  (a =⟪ p ⟫ s) with split  (a =⟪ p ⟫ s)
-  ... | (a' , (t , q)) = #- n t ∙∙ q --let (a'' , (t' , q'))=  split  (a =⟪ p ⟫ s) in  
+  ... | (a' , (t , q)) = #- n t ∙∙ q
 
 
   _!0 = !- 0
@@ -193,10 +193,10 @@ module _ {i} {A : Type i} where
     ex5 = idp
 
 {- agda 2.3.2.2 -}
---    ex6 : (↯ t #1) == ? -- s
+--    ex6 : (↯ t #1) == s
 --    ex6 = idp
 
---    ex7 : (↯ t #3) == ? -- r ∙ s
+--    ex7 : (↯ t #3) == r ∙ s
 --    ex7 = idp
 
     ex8 : (↯ 2# t) == p ∙ q
