@@ -7,7 +7,7 @@ module homotopy.JoinComm where
 module _ {i j} {A : Type i} {B : Type j} where
 
   swap : A * B → B * A
-  swap = Swap.f  module _ where
+  swap = Swap.f  module SwapM where
 
     swap-glue : (a : A) (b : B) → right a == left b
     swap-glue a b = ! (glue (b , a))
@@ -30,9 +30,9 @@ module _ {i j} {A : Type i} {B : Type j} where
 
     swap-swap-glue : (c : A × B) → ap swap (ap swap (glue c)) == glue c
     swap-swap-glue (a , b) =
-      ap swap (ap swap (glue (a , b)))   =⟨ Swap.glue-β (a , b) |in-ctx ap swap ⟩
+      ap swap (ap swap (glue (a , b)))   =⟨ SwapM.Swap.glue-β (a , b) |in-ctx ap swap ⟩
       ap swap (! (glue (b , a)))         =⟨ ap-! swap (glue (b , a)) ⟩
-      ! (ap swap (glue (b , a)))         =⟨ Swap.glue-β (b , a) |in-ctx ! ⟩
+      ! (ap swap (glue (b , a)))         =⟨ SwapM.Swap.glue-β (b , a) |in-ctx ! ⟩
       ! (! (glue (a , b)))               =⟨ !-! (glue (a , b)) ⟩
       glue (a , b) ∎
 
