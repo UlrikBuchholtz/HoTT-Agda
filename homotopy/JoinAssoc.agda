@@ -14,6 +14,11 @@ module homotopy.JoinAssoc {i j k} (A : Type i) (B : Type j) (C : Type k) where
     to-left-glue : (ab : A × B) → left (fst ab) == right (left (snd ab)) :> A * (B * C)
     to-left-glue (a , b) = glue (a , left b)
 
+    {-
+      (to∘inl)(inl(a))       :≡ inl(a)
+      (to∘inl)(inr(b))       :≡ inr(inl(b))
+      ap (to∘inl) (glue(a,b)) := glue(a,inl(b))
+    -}
     module ToLeft = PushoutRec left (right ∘ left) to-left-glue
 
     to-left : A * B → A * (B * C)
@@ -34,6 +39,11 @@ module homotopy.JoinAssoc {i j k} (A : Type i) (B : Type j) (C : Type k) where
     to-glue : (ab-c : (A * B) × C) → to-left (fst ab-c) == right (right (snd ab-c))
     to-glue (ab , c) = M.f ab where module M = ToGlue c
 
+    {- 
+      to(inr(c))             :≡ inr(inr(c))
+      ap to (glue(inl(a),c)) := glue(a,inr(c))
+      ap to (glue(inr(b),c)) := ap inr (glue(b,c))
+    -}
     module To = PushoutRec {d = *-span (A * B) C} to-left (right ∘ right) to-glue
 
   {- Second map -}
@@ -44,6 +54,11 @@ module homotopy.JoinAssoc {i j k} (A : Type i) (B : Type j) (C : Type k) where
     from-right-glue : (bc : B × C) → left (right (fst bc)) == right (snd bc)
     from-right-glue (b , c) = glue (right b , c)
 
+    {-
+      (from∘inr)(inl(b))        :≡ inl(inr(b))
+      (from∘inr)(inr(c))        :≡ inr(c)
+      ap (from∘inr) (glue(b,c)) := glue(lnr(b),c)
+    -}
     module FromRight = PushoutRec (left ∘ right) right from-right-glue
 
     from-right : B * C → (A * B) * C
@@ -64,6 +79,11 @@ module homotopy.JoinAssoc {i j k} (A : Type i) (B : Type j) (C : Type k) where
     from-glue : (a-bc : A × (B * C)) → left (left (fst a-bc)) == from-right (snd a-bc)
     from-glue (a , bc) = M.f bc where module M = FromGlue a
 
+    {- 
+      (from∘inl)(a)           :≡ inl(inl(a))
+      ap from (glue(a,inr(c)) := glue(inl(a),c)
+      ap from (glue(a,inl(b)) := ap inl (glue(a,b))
+    -}
     module From = PushoutRec {d = *-span A (B * C)} (left ∘ left) from-right from-glue
 
   open MM public
@@ -104,6 +124,23 @@ module homotopy.JoinAssoc {i j k} (A : Type i) (B : Type j) (C : Type k) where
   to-from-glue-right : (a : A) (c : C) → idp == to-from-right (right c) [ (λ x → to (from x) == x) ↓ glue (a , right c) ]
   to-from-glue-right a c = ↓-∘=idf-in to from (↯ to-from-glue-right' a c)
 
+
+
+{-
+
+
+  to-from-left-glue' : (a : A) → ap (to ∘ from-left) a =-= ap right (a)
+  to-from-left-glue' a =
+    ap (λ z → to (from-right z)) (glue (b , c))     =⟪ ap-∘ to from-right (glue (b , c)) ⟫
+    ap to (ap from-right (glue (b , c)))            =⟪ FromRight.glue-β (b , c) |in-ctx ap to ⟫
+    ap to (glue ((right b , c) :> (A * B) × C))     =⟪ ToM.To.glue-β (right b , c) ⟫
+    ap right (glue (b , c)) ∎∎
+
+  to-from-left-glue : (a : A) → idp == idp [ (λ x → to (from (left x)) == left x) ↓ glue a ]
+  to-from-left-glue (a) = ↓-='-in (! (↯ to-from-right-glue' b c))
+
+  module ToFromLeft = PushoutElim (λ _ → idp) (λ _ → idp) to-from-left-glue
+-}
 
   postulate  -- Not proved yet. Some of it is being worked on at JoinAssoc2
     *-assoc : ((A * B) * C) ≃ (A * (B * C))
