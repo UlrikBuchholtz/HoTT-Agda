@@ -109,10 +109,14 @@ module _ {i} {A : Type i} where
     point-from-end' O (a =⟪ p ⟫ s) = point-from-end' O s
     point-from-end' (S n) (a =⟪ p ⟫ s) = point-from-end' n (fst (snd (split (a =⟪ p ⟫ s))))
 
+
+  {- agda 2.3.2.2 compatibility: Apparently the let construct changed. -}
   #- : (n : ℕ) {a a' : A} (s : PathSeq a a') → PathSeq (point-from-end' n s) a'
   #- n (a ∎∎) = a ∎∎
   #- O (a =⟪ p ⟫ s) = #- O s
-  #- (S n) (a =⟪ p ⟫ s) = let (a' , (t , q)) = split (a =⟪ p ⟫ s) in #- n t ∙∙ q
+  #- (S n)  (a =⟪ p ⟫ s) with split  (a =⟪ p ⟫ s)
+  ... | (a' , (t , q)) = #- n t ∙∙ q
+
 
   _!0 = !- 0
   _!1 = !- 1
@@ -188,11 +192,12 @@ module _ {i} {A : Type i} where
     ex5 : (↯ 4! t) == s
     ex5 = idp
 
-    ex6 : (↯ t #1) == s
-    ex6 = idp
+{- agda 2.3.2.2 -}
+--    ex6 : (↯ t #1) == s
+--    ex6 = idp
 
-    ex7 : (↯ t #3) == r ∙ s
-    ex7 = idp
+--    ex7 : (↯ t #3) == r ∙ s
+--    ex7 = idp
 
     ex8 : (↯ 2# t) == p ∙ q
     ex8 = idp
