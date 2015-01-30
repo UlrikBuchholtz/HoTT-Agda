@@ -8,14 +8,15 @@ open import lib.types.Pi
 open import lib.types.Sigma
 open import lib.types.Pointed
 open import lib.types.LoopSpace
+open import lib.types.Truncation
 open import lib.types.PathSet
 
-module lib.types.Cover {i} where
+module lib.types.Cover where
 
 {-
   The definition of covering spaces.
 -}
-record Cover (A : Type i) j : Type (lmax i (lsucc j)) where
+record Cover {i} (A : Type i) j : Type (lmax i (lsucc j)) where
   constructor cover
   field
     Fiber : A → Type j
@@ -23,11 +24,12 @@ record Cover (A : Type i) j : Type (lmax i (lsucc j)) where
   Fiber-is-set = Fiber-level
   TotalSpace = Σ A Fiber
 
--- Basic tools
-module _ {A : Type i} {j} where
+-- Basic lemmas
+module _ {i} {A : Type i} {j} where
 
   open Cover
 
+  -- Equality between covers.
   private
     cover=′ : {c₁ c₂ : Cover A j} → Fiber c₁ == Fiber c₂ → c₁ == c₂
     cover=′ {cover f _} {cover .f _} idp = ap (cover f) $
@@ -46,7 +48,7 @@ module _ {A : Type i} {j} where
   UniversalCover = Σ (Cover A j) is-universal
 
 -- Theorem: A covering space keeps higher homotopy groups.
-module _ (A∙ : Ptd i)
+module _ {i} (A∙ : Ptd i)
   {j} (c : Cover (fst A∙) j)
   (a↑ : Cover.Fiber c (snd A∙)) where
 
@@ -64,7 +66,7 @@ module _ (A∙ : Ptd i)
     to′ idp=p⇑ = ap fst= idp=p⇑
 
     -- The projection map from Ω²(Σ A F) to Ω²(A).
-    to : Ω^ 2 ∙[ Σ A F , (a , a↑) ] → Ω^ 2 A∙
+    to : Ω^ 2 ⊙[ Σ A F , (a , a↑) ] → Ω^ 2 A∙
     to p²⇑ = to′ {p⇑ = idp} p²⇑
 
     -- Auxiliary synthesized path for injection.
@@ -83,7 +85,7 @@ module _ (A∙ : Ptd i)
     from′ idp=p idp=p↑ = pair== idp=p idp=p↑
 
     -- The injection map from Ω²(A) to Ω²(Σ A F).
-    from : Ω^ 2 A∙ → Ω^ 2 ∙[ Σ A F , (a , a↑) ]
+    from : Ω^ 2 A∙ → Ω^ 2 ⊙[ Σ A F , (a , a↑) ]
     from p² = from′ {p = idp} {p↑ = idp} p² (idp=p↑ p²)
 
     -- Injection is left-inverse to projection (with some ends free).
@@ -118,7 +120,7 @@ module _ (A∙ : Ptd i)
   Ω²ΣAFiber≃Ω²A = to , is-eq to from to-from from-to
 
 -- A natural way to construct a G-set from covering spaces.
-module _ {A : Type i} where
+module _ {i} {A : Type i} where
   open Cover
 
   cover-trace : ∀ {j} (cov : Cover A j) {a₁ a₂}
@@ -140,3 +142,18 @@ module _ {A : Type i} where
       → cover-trace cov (cover-trace cov a↑ loop) p
       == cover-trace cov a↑ (loop ∙₀ p)
     cover-paste cov a↑ loop p = ! $ trans₀-∙₀ (λ {a} → Fiber-is-set cov a) loop p a↑
+
+-- Path sets form a covering space
+module _ {i} (A∙ : Ptd i) where
+  path-set-cover : Cover (fst A∙) i
+  path-set-cover = record
+    { Fiber = λ a → snd A∙ =₀ a
+    ; Fiber-level = λ a → Trunc-level
+    }
+
+-- Cover morphisms
+CoverHom : ∀ {i} {A : Type i} {j₁ j₂}
+  → (cov1 : Cover A j₁)
+  → (cov2 : Cover A j₂)
+  → Type (lmax i (lmax j₁ j₂))
+CoverHom (cover F₁ _) (cover F₂ _) = ∀ a → F₁ a → F₂ a

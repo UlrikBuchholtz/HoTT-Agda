@@ -4,10 +4,36 @@ open import lib.Basics
 
 module lib.types.Paths where
 
+{- ! is an equivalence -}
 module _ {i} {A : Type i} {x y : A} where
 
   !-equiv : (x == y) ≃ (y == x)
   !-equiv = equiv ! ! !-! !-!
+
+{- Pre- and post- concatenation are equivalences -}
+module _ {i} {A : Type i} {x y z : A} where
+
+  pre∙-is-equiv : (p : x == y) → is-equiv (λ (q : y == z) → p ∙ q)
+  pre∙-is-equiv p = is-eq (λ q → p ∙ q) (λ r → ! p ∙ r) f-g g-f
+    where f-g : ∀ r → p ∙ ! p ∙ r == r
+          f-g r = ! (∙-assoc p (! p) r) ∙ ap (λ s → s ∙ r) (!-inv-r p)
+
+          g-f : ∀ q → ! p ∙ p ∙ q == q
+          g-f q = ! (∙-assoc (! p) p q) ∙ ap (λ s → s ∙ q) (!-inv-l p)
+
+  pre∙-equiv : (p : x == y) → (y == z) ≃ (x == z)
+  pre∙-equiv p = ((λ q → p ∙ q) , pre∙-is-equiv p)
+
+  post∙-is-equiv : (p : y == z) → is-equiv (λ (q : x == y) → q ∙ p)
+  post∙-is-equiv p = is-eq (λ q → q ∙ p) (λ r → r ∙ ! p) f-g g-f
+    where f-g : ∀ r → (r ∙ ! p) ∙ p == r
+          f-g r = ∙-assoc r (! p) p ∙ ap (λ s → r ∙ s) (!-inv-l p) ∙ ∙-unit-r r
+
+          g-f : ∀ q → (q ∙ p) ∙ ! p == q
+          g-f q = ∙-assoc q p (! p) ∙ ap (λ s → q ∙ s) (!-inv-r p) ∙ ∙-unit-r q
+
+  post∙-equiv : (p : y == z) → (x == y) ≃ (x == z)
+  post∙-equiv p = ((λ q → q ∙ p) , post∙-is-equiv p)
 
 module _ {i j} {A : Type i} {B : Type j} {f : A → B} {b : B} where
 
@@ -24,18 +50,22 @@ module _ {i j} {A : Type i} {B : Type j} {f : A → B} {b : B} where
   ↓-app=cst-eqv : {x y : A} {p : x == y} {u : f x == b} {v : f y == b}
     → (u == (ap f p ∙ v)) ≃ (u == v [ (λ x → f x == b) ↓ p ])
   ↓-app=cst-eqv {p = idp} = equiv ↓-app=cst-in ↓-app=cst-out 
-                             
      (λ _ → idp) (λ _ → idp)
 
   ↓-cst=app-in : {x y : A} {p : x == y} {u : b == f x} {v : b == f y}
     → (u ∙' ap f p) == v
     → (u == v [ (λ x → b == f x) ↓ p ])
-  ↓-cst=app-in {p = idp} idp = idp
+  ↓-cst=app-in {p = idp} q = q
 
   ↓-cst=app-out : {x y : A} {p : x == y} {u : b == f x} {v : b == f y}
     → (u == v [ (λ x → b == f x) ↓ p ])
     → (u ∙' ap f p) == v
-  ↓-cst=app-out {p = idp} idp = idp
+  ↓-cst=app-out {p = idp} r = r
+
+  ↓-cst=app-eqv : {x y : A} {p : x == y} {u : b == f x} {v : b == f y}
+    → ((u ∙' ap f p) == v) ≃ (u == v [ (λ x → b == f x) ↓ p ])
+  ↓-cst=app-eqv {p = idp} = equiv ↓-cst=app-in ↓-cst=app-out 
+     (λ _ → idp) (λ _ → idp)
 
 module _ {i} {A : Type i} where
 

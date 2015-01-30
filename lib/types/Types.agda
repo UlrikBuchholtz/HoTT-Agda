@@ -19,9 +19,11 @@ open import lib.types.Span public
 open import lib.types.Pushout public
 open import lib.types.PushoutFlattening public
 open import lib.types.Suspension public
+open import lib.types.IteratedSuspension public
 open import lib.types.Cofiber public
 open import lib.types.Wedge public
 open import lib.types.BigWedge public
+open import lib.types.Smash public
 open import lib.types.Join public
 open import lib.types.Torus public
 open import lib.types.Truncation public
@@ -36,9 +38,9 @@ open import lib.types.LoopSpace public
 open import lib.types.PathSet public
 open import lib.types.FundamentalGroupoid public
 open import lib.types.Cover public
-
--- (somewhat) broken in 2.3.2.2?
 open import lib.types.PathSeq public
+open import lib.types.List public
+open import lib.types.NatColim public
 
 -- This should probably not be exported
 -- module Generic1HIT {i j} (A : Type i) (B : Type j) (f g : B → A) where

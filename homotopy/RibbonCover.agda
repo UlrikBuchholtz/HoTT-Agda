@@ -1,7 +1,7 @@
 {-# OPTIONS --without-K #-}
 
 {-
-  Ribbon is the explicit covering space construction.
+  Ribbon is an explicit covering space construction.
 
   This construction is given by Daniel Grayson, Favonia
   and Guillaume Brunerie together.
@@ -16,12 +16,26 @@ module homotopy.RibbonCover {i : ULevel} where
   -- The HIT ribbon---reconstructed covering space
 
   private
-    module _ (A∙ : Ptd i) {j} (gs : Gset (concrete-fundamental-group A∙) j) where
+    π1 = concrete-fundamental-group
+
+  private
+    module _ (A∙ : Ptd i) {j} (gs : Gset (π1 A∙) j) where
       private
         A = fst A∙
         a = snd A∙
         El = Gset.El gs
         El-level = Gset.El-level gs
+        _⊙_ = Gset.act gs
+
+      {-
+        What the following data type definition should be
+        when we have a proof assistant for HoTT:
+
+        data Ribbon (a₂ : A) : Set where
+          trace : El → a =₀ a₂ → Ribbon a₂
+          paste : ∀ el loop (p : a =₀ a₂)
+                → trace (el ⊙ loop) p == trace el (loop ∙₀ p)
+      -}
 
       data #Ribbon-aux (a₂ : A) : Type (lmax i j) where
         #trace : El → a =₀ a₂ → #Ribbon-aux a₂
@@ -29,11 +43,11 @@ module homotopy.RibbonCover {i : ULevel} where
       data #Ribbon (a₂ : A) : Type (lmax i j) where
         #ribbon : #Ribbon-aux a₂ → (Unit → Unit) → #Ribbon a₂
 
-  Ribbon : ∀ (A∙ : Ptd i) {j} (gs : Gset (fundamental-group A∙) j)
+  Ribbon : ∀ (A∙ : Ptd i) {j} (gs : Gset (π1 A∙) j)
     → fst A∙ → Type (lmax i j)
   Ribbon = #Ribbon
 
-  module _ {A∙ : Ptd i} {j} {gs : Gset (fundamental-group A∙) j} {a₂ : fst A∙} where
+  module _ {A∙ : Ptd i} {j} {gs : Gset (concrete-fundamental-group A∙) j} {a₂ : fst A∙} where
     private
       A = fst A∙
       a = snd A∙
@@ -98,7 +112,7 @@ module homotopy.RibbonCover {i : ULevel} where
     open RibbonRec public using () renaming (f to Ribbon-rec)
 
   -- This data structure gives a cover.
-  Ribbon-cover : ∀ (A∙ : Ptd i) {j} (gs : Gset (fundamental-group A∙) j)
+  Ribbon-cover : ∀ (A∙ : Ptd i) {j} (gs : Gset (π1 A∙) j)
     → Cover (fst A∙) (lmax i j)
   Ribbon-cover A∙ gs = record
     { Fiber = Ribbon A∙ gs
@@ -106,7 +120,7 @@ module homotopy.RibbonCover {i : ULevel} where
     }
 
   trans-trace : ∀ {A : Type i} {a₁} {j}
-    {gs : Gset (fundamental-group (A , a₁)) j}
+    {gs : Gset (π1 (A , a₁)) j}
     {a₂} (q : a₁ == a₂) y p
     → transport (Ribbon (A , a₁) gs) q (trace y p) == trace y (p ∙₀ [ q ])
   trans-trace idp y p = ap (trace y) $ ! $ ∙₀-unit-r p

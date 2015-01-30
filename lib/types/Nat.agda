@@ -2,6 +2,7 @@
 
 open import lib.Base
 open import lib.PathGroupoid
+open import lib.Relation
 open import lib.NType
 open import lib.types.Empty
 
@@ -12,8 +13,6 @@ data ℕ : Type₀ where
   S : (n : ℕ) → ℕ
 
 {-# BUILTIN NATURAL ℕ #-}
-{-# BUILTIN ZERO O #-}
-{-# BUILTIN SUC S #-}
 
 Nat = ℕ
 
@@ -41,14 +40,14 @@ _*2 : ℕ → ℕ
 O *2 = O
 (S n) *2 = S (S (n *2))
 
+ℕ-pred : ℕ → ℕ
+ℕ-pred 0 = 0
+ℕ-pred (S n) = n
+
+ℕ-S-inj : (n m : ℕ) (p : S n == S m) → n == m
+ℕ-S-inj n m p = ap ℕ-pred p
+
 private
-  ℕ-get-S : ℕ → ℕ
-  ℕ-get-S 0 = 42
-  ℕ-get-S (S n) = n
-
-  S-injective : (n m : ℕ) (p : S n == S m) → n == m
-  S-injective n m p = ap ℕ-get-S p
-
   ℕ-S≠O-type : ℕ → Type₀
   ℕ-S≠O-type O = Empty
   ℕ-S≠O-type (S n) = Unit
@@ -56,9 +55,6 @@ private
 abstract
   ℕ-S≠O : (n : ℕ) → S n ≠ O
   ℕ-S≠O n p = transport ℕ-S≠O-type p unit
-
-  ℕ-S≠O#instance : {n : ℕ} → (S n ≠ O)
-  ℕ-S≠O#instance {n} = ℕ-S≠O n
 
   ℕ-O≠S : (n : ℕ) → (O ≠ S n)
   ℕ-O≠S n p = ℕ-S≠O n (! p)
@@ -69,7 +65,7 @@ abstract
   ℕ-has-dec-eq (S n) O = inr (ℕ-S≠O n)
   ℕ-has-dec-eq (S n) (S m) with ℕ-has-dec-eq n m
   ℕ-has-dec-eq (S n) (S m) | inl p = inl (ap S p)
-  ℕ-has-dec-eq (S n) (S m) | inr p⊥ = inr (λ p → p⊥ (S-injective n m p))
+  ℕ-has-dec-eq (S n) (S m) | inr p⊥ = inr (λ p → p⊥ (ℕ-S-inj n m p))
 
   ℕ-is-set : is-set ℕ
   ℕ-is-set = dec-eq-is-set ℕ-has-dec-eq
@@ -94,6 +90,9 @@ O< (S m) = ltSR (O< m)
 O≤ : (m : ℕ) → O ≤ m
 O≤ O = inl idp
 O≤ (S m) = inr (O< m)
+
+n≮O : ∀ n → ¬ (n < O)
+n≮O _ ()
 
 <-trans : {m n k : ℕ} → m < n → n < k → m < k
 <-trans lt₁ ltS = ltSR lt₁
@@ -120,8 +119,15 @@ O≤ (S m) = inr (O< m)
 <-cancel-S (ltSR lt) = <-trans ltS lt
 
 ≤-cancel-S : {m n : ℕ} → S m ≤ S n → m ≤ n
-≤-cancel-S (inl p) = inl (ap ℕ-get-S p)
+≤-cancel-S (inl p) = inl (ap ℕ-pred p)
 ≤-cancel-S (inr lt) = inr (<-cancel-S lt)
+
+<-dec : Dec _<_
+<-dec _     O     = inr (n≮O _)
+<-dec O     (S m) = inl (O< m)
+<-dec (S n) (S m) with <-dec n m
+<-dec (S n) (S m) | inl p  = inl (<-ap-S p)
+<-dec (S n) (S m) | inr p⊥ = inr (p⊥ ∘ <-cancel-S)
 
 <-+-l : {m n : ℕ} (k : ℕ) → m < n → (k + m) < (k + n)
 <-+-l O lt = lt

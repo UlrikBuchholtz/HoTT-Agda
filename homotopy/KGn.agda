@@ -10,32 +10,30 @@ open import homotopy.KG1HSpace
 module homotopy.KGn where
 
 -- K(G,n) when G is π₁(A,a₀)
-module KGnImplicit {i} (A : Type i) (cA : is-connected ⟨0⟩ A) 
-  (gA : has-level ⟨ 1 ⟩ A) (A-H : HSS A) 
+module KGnImplicit {i} (A : Type i) (cA : is-connected ⟨0⟩ A)
+  (gA : has-level ⟨ 1 ⟩ A) (A-H : HSS A)
   (μcoh : HSS.μe- A-H (HSS.e A-H) == HSS.μ-e A-H (HSS.e A-H)) where
 
   private
     a₀ = HSS.e A-H
-    X = ∙[ A , a₀ ]
+    X = ⊙[ A , a₀ ]
 
-  Ptd-KG : (n : ℕ) ⦃ _ : n ≠ O ⦄ → Ptd i
-  Ptd-KG O ⦃ posi ⦄ = ⊥-rec (posi idp)
-  Ptd-KG (S n) ⦃ _ ⦄ = Ptd-Trunc ⟨ S n ⟩ (Ptd-Susp^ n X)
+  ⊙KG : (n : ℕ) → Ptd i
+  ⊙KG O = ⊙Ω X
+  ⊙KG (S n) = ⊙Trunc ⟨ S n ⟩ (⊙Susp^ n X)
 
-  KG : (n : ℕ) ⦃ _ : n ≠ O ⦄ → Type i
-  KG n = fst (Ptd-KG n)
-  
-  kbase : (n : ℕ) ⦃ _ : n ≠ O ⦄ → KG n
-  kbase n = snd (Ptd-KG n)
+  module _ (n : ℕ) where
+    KG = fst (⊙KG n)
+    kbase = snd (⊙KG n)
 
-  KG-level : (n : ℕ) ⦃ _ : n ≠ O ⦄ → has-level ⟨ n ⟩ (fst (Ptd-KG n))
-  KG-level O ⦃ posi ⦄ = ⊥-rec (posi idp)
-  KG-level (S n) ⦃ _ ⦄ = Trunc-level
+  KG-level : (n : ℕ) → has-level ⟨ n ⟩ (fst (⊙KG n))
+  KG-level O = gA a₀ a₀
+  KG-level (S n) = Trunc-level
 
   KG-conn : (n : ℕ) → is-connected ⟨ n ⟩ (KG (S n))
-  KG-conn n = Trunc-preserves-conn ⟨ S n ⟩ 
-                  (transport (λ t → is-connected t (fst (Ptd-Susp^ n X)))
-                    (nlemma n) (Ptd-Susp^-conn n cA))
+  KG-conn n = Trunc-preserves-conn ⟨ S n ⟩
+                  (transport (λ t → is-connected t (fst (⊙Susp^ n X)))
+                    (nlemma n) (⊙Susp^-conn n cA))
     where nlemma : (n : ℕ) → (n -2) +2+ ⟨0⟩ == ⟨ n ⟩
           nlemma O = idp
           nlemma (S n) = ap S (nlemma n)
@@ -44,7 +42,7 @@ module KGnImplicit {i} (A : Type i) (cA : is-connected ⟨0⟩ A)
   π (S k) (KG (S n)) (kbase (S n)) == π k (KG n) (kbase+ n)
   where k > 0 and n = S (S n')
   -}
-  module Stable (k n' : ℕ) ⦃ pk : k ≠ 0 ⦄ ⦃ psk : S k ≠ 0 ⦄
+  module Stable (k n' : ℕ) (tk : k ≠ 0) (tsk : S k ≠ 0)
     (indexing : k ≤ S (S n'))
     where
 
@@ -56,165 +54,174 @@ module KGnImplicit {i} (A : Type i) (cA : is-connected ⟨0⟩ A)
       lte = ⟨⟩-monotone-≤ $ indexing
 
       kle : k ≤ (S n') *2
-      kle = ≤-trans indexing (lemma n') 
+      kle = ≤-trans indexing (lemma n')
         where lemma : (n' : ℕ) → S (S n') ≤ (S n') *2
               lemma O = inl idp
               lemma (S n') = ≤-trans (≤-ap-S (lemma n')) (inr ltS)
 
     private
-      module SS = Susp^Stable X cA (S n') k ⦃ pk ⦄ ⦃ psk ⦄ kle
+      module SS = Susp^Stable X cA (S n') k tk tsk kle
 
     abstract
-      stable : π (S k) ⦃ psk ⦄ (Ptd-KG (S n))
-             == π k ⦃ pk ⦄ (Ptd-KG n)
-      stable = 
-        π (S k) ⦃ psk ⦄ (Ptd-KG (S n))
-          =⟨ π-Trunc-≤T-iso _ ⦃ psk ⦄ _ _ (≤T-ap-S lte) ⟩
-        π (S k) ⦃ psk ⦄ (Ptd-Susp^ n X) 
-          =⟨ SS.stable ⟩ 
-        π k ⦃ pk ⦄ (Ptd-Susp^ (S n') X)
-          =⟨ ! (π-Trunc-≤T-iso _ ⦃ pk ⦄ _ _ lte) ⟩
-        π k ⦃ pk ⦄ (Ptd-KG n) ∎
+      stable : π (S k) tsk (⊙KG (S n))
+             == π k tk (⊙KG n)
+      stable =
+        π (S k) tsk (⊙KG (S n))
+          =⟨ π-below-trunc _ tsk _ _ (≤T-ap-S lte) ⟩
+        π (S k) tsk (⊙Susp^ n X)
+          =⟨ SS.stable ⟩
+        π k tk (⊙Susp^ (S n') X)
+          =⟨ ! (π-below-trunc _ tk _ _ lte) ⟩
+        π k tk (⊙KG n) ∎
 
   module BelowDiagonal where
 
-    π₁ : (n : ℕ) → ⦃ p1 : 1 ≠ 0 ⦄ 
-      → π 1 ⦃ p1 ⦄ (Ptd-KG (S (S n))) == LiftUnit-Group
-    π₁ n ⦃ p1 ⦄ = transport 
-      (λ pi → pi 1 ⦃ p1 ⦄ (Ptd-KG (S (S n))) == LiftUnit-Group) 
-      π-fold 
-      (contr-iso-LiftUnit (π-concrete 1 ⦃ p1 ⦄ (Ptd-KG (S (S n)))) 
-         (connected-at-level-is-contr 
+    π₁ : (n : ℕ) (t1 : 1 ≠ 0 )
+      → π 1 t1 (⊙KG (S (S n))) == LiftUnit-Group
+    π₁ n t1 = transport
+      (λ pi → pi 1 t1 (⊙KG (S (S n))) == LiftUnit-Group)
+      π-fold
+      (contr-iso-LiftUnit (π-concrete 1 t1 (⊙KG (S (S n))))
+         (connected-at-level-is-contr
            (raise-level-≤T (≤T-ap-S (≤T-ap-S (-2≤T (n -2))))
-                           (Trunc-level {n = ⟨0⟩})) 
+                           (Trunc-level {n = ⟨0⟩}))
            (Trunc-preserves-conn ⟨0⟩ (path-conn (KG-conn (S n))))))
 
-    -- some clutter here arises from the definition of <; 
+    -- some clutter here arises from the definition of <;
     -- any simple way to avoid this?
-    π-below : (k n : ℕ) → ⦃ pk : k ≠ 0 ⦄ → ⦃ pn : n ≠ 0 ⦄ → (k < n) 
-      → π k ⦃ pk ⦄ (Ptd-KG n ⦃ pn ⦄) == LiftUnit-Group
-    π-below 0 _ ⦃ pk ⦄ lt = ⊥-rec (pk idp)
-    π-below 1 .2 ⦃ pk ⦄ ltS = π₁ 0 ⦃ pk ⦄
-    π-below 1 .3 ⦃ pk ⦄ (ltSR ltS) = π₁ 1 ⦃ pk ⦄
-    π-below 1 (S (S n)) ⦃ pk ⦄ (ltSR (ltSR _)) = π₁ n ⦃ pk ⦄
-    π-below (S (S k)) ._ ⦃ pssk ⦄ ltS = 
-      Stable.stable (S k) k ⦃ ℕ-S≠O k ⦄ ⦃ pssk ⦄ (inr ltS) 
-      ∙ π-below (S k) _ ⦃ ℕ-S≠O k ⦄ ⦃ pssk ⦄ ltS
-    π-below (S (S k)) ._ ⦃ pssk ⦄ (ltSR ltS) = 
-      Stable.stable (S k) (S k) ⦃ ℕ-S≠O k ⦄ ⦃ pssk ⦄ (inr (ltSR ltS)) 
-      ∙ π-below (S k) _ ⦃ ℕ-S≠O k ⦄ ⦃ ℕ-S≠O (S (S k)) ⦄ (ltSR ltS) 
-    π-below (S (S k)) ._ ⦃ pssk ⦄ (ltSR (ltSR ltS)) = 
-      Stable.stable (S k) (S (S k)) ⦃ ℕ-S≠O k ⦄ ⦃ pssk ⦄ (inr (ltSR (ltSR ltS)))
-      ∙ π-below (S k) _ ⦃ ℕ-S≠O k ⦄ ⦃ ℕ-S≠O (S (S (S k))) ⦄ (ltSR (ltSR ltS))
-    π-below (S (S k)) (S (S (S n))) ⦃ pssk ⦄ (ltSR (ltSR (ltSR lt))) = 
-      Stable.stable (S k) n ⦃ ℕ-S≠O k ⦄ ⦃ pssk ⦄ (inr (<-cancel-S (ltSR (ltSR (ltSR lt))))) 
-      ∙ π-below (S k) _ ⦃ ℕ-S≠O k ⦄ ⦃ ℕ-S≠O (S n) ⦄ (<-cancel-S (ltSR (ltSR (ltSR lt))))
+    π-below : (k n : ℕ) (tk : k ≠ 0) → (k < n)
+      → π k tk (⊙KG n) == LiftUnit-Group
+    π-below 0 _ tk lt = ⊥-rec (tk idp)
+    π-below 1 .2 tk ltS = π₁ 0 tk
+    π-below 1 .3 tk (ltSR ltS) = π₁ 1 tk
+    π-below 1 (S (S n)) tk (ltSR (ltSR _)) = π₁ n tk
+    π-below (S (S k)) ._ tssk ltS =
+      Stable.stable (S k) k (ℕ-S≠O k) tssk (inr ltS)
+      ∙ π-below (S k) _ (ℕ-S≠O k) ltS
+    π-below (S (S k)) ._ tssk (ltSR ltS) =
+      Stable.stable (S k) (S k) (ℕ-S≠O k) tssk (inr (ltSR ltS))
+      ∙ π-below (S k) _ (ℕ-S≠O k) (ltSR ltS)
+    π-below (S (S k)) ._ tssk (ltSR (ltSR ltS)) =
+      Stable.stable (S k) (S (S k)) (ℕ-S≠O k) tssk (inr (ltSR (ltSR ltS)))
+      ∙ π-below (S k) _ (ℕ-S≠O k) (ltSR (ltSR ltS))
+    π-below (S (S k)) (S (S (S n))) tssk (ltSR (ltSR (ltSR lt))) =
+      Stable.stable (S k) n (ℕ-S≠O k) tssk
+        (inr (<-cancel-S (ltSR (ltSR (ltSR lt)))))
+      ∙ π-below (S k) _ (ℕ-S≠O k) (<-cancel-S (ltSR (ltSR (ltSR lt))))
 
 
   module OnDiagonal where
 
-    π₁ : ⦃ pn : 1 ≠ O ⦄ → ⦃ p1 : 1 ≠ O ⦄ 
-      → π 1 ⦃ pn ⦄ (Ptd-KG 1 ⦃ ℕ-S≠O 0 ⦄) == π 1 ⦃ p1 ⦄ X
-    π₁ ⦃ pn ⦄ ⦃ p1 ⦄ = 
-      π-Trunc-≤T-iso 1 ⦃ pn ⦄ ⟨ 1 ⟩ X ≤T-refl 
-      ∙ ap (λ p → π 1 ⦃ p ⦄ X) 
-           (prop-has-all-paths (Π-level (λ _ → ⊥-is-prop)) pn p1)
+    π₁ : (tn : 1 ≠ O) (t1 : 1 ≠ O)
+      → π 1 tn (⊙KG 1) == π 1 t1 X
+    π₁ tn t1 =
+      π-below-trunc 1 tn ⟨ 1 ⟩ X ≤T-refl
+      ∙ ap (λ t → π 1 t X)
+           (prop-has-all-paths (Π-level (λ _ → ⊥-is-prop)) tn t1)
 
     private
       module Π₂ = Pi2HSusp A gA cA A-H μcoh
 
-    π₂ : ⦃ pn : 2 ≠ O ⦄ → ⦃ p1 : 1 ≠ O ⦄ 
-      → π 2 ⦃ pn ⦄ (Ptd-KG 2 ⦃ ℕ-S≠O 1 ⦄) == π 1 ⦃ p1 ⦄ X
-    π₂ ⦃ pn ⦄ ⦃ p1 ⦄ = 
-      π-Trunc-≤T-iso 2 ⦃ pn ⦄ ⟨ 2 ⟩ (Ptd-Susp X) ≤T-refl 
-      ∙ Π₂.π₂-Suspension ⦃ p1 ⦄ ⦃ pn ⦄
+    π₂ : (tn : 2 ≠ O) (t1 : 1 ≠ O)
+      → π 2 tn (⊙KG 2) == π 1 t1 X
+    π₂ tn t1 =
+      π-below-trunc 2 tn ⟨ 2 ⟩ (⊙Susp X) ≤T-refl
+      ∙ Π₂.π₂-Suspension t1 tn
 
-    π-diag : (n : ℕ) → ⦃ pn : n ≠ 0 ⦄ → ⦃ p1 : 1 ≠ O ⦄
-      → π n ⦃ pn ⦄ (Ptd-KG n) == π 1 ⦃ p1 ⦄ X
-    π-diag 0 ⦃ pn ⦄ ⦃ _ ⦄ = ⊥-rec (pn idp)
-    π-diag 1 ⦃ pn ⦄ ⦃ p1 ⦄ = π₁ ⦃ pn ⦄ ⦃ p1 ⦄
-    π-diag 2 ⦃ pn ⦄ ⦃ p1 ⦄ = π₂ ⦃ pn ⦄ ⦃ p1 ⦄
-    π-diag (S (S (S n))) ⦃ pn ⦄ ⦃ p1 ⦄ = 
-      Stable.stable (S (S n)) n ⦃ psk = pn ⦄ ≤-refl 
-      ∙ π-diag (S (S n)) ⦃ p1 = p1 ⦄ 
+    π-diag : (n : ℕ) (tn : n ≠ 0) (t1 : 1 ≠ O)
+      → π n tn (⊙KG n) == π 1 t1 X
+    π-diag 0 tn _ = ⊥-rec (tn idp)
+    π-diag 1 tn t1 = π₁ tn t1
+    π-diag 2 tn t1 = π₂ tn t1
+    π-diag (S (S (S n))) tn t1 =
+      Stable.stable (S (S n)) n (ℕ-S≠O _) tn ≤-refl
+      ∙ π-diag (S (S n)) (ℕ-S≠O _) t1
 
   module AboveDiagonal where
 
-    π-above : (k n : ℕ) → ⦃ pk : k ≠ 0 ⦄ → ⦃ pn : n ≠ 0 ⦄ → (n < k)
-      → π k (Ptd-KG n) == LiftUnit-Group
-    π-above k n lt = transport
-      (λ pi → pi k (Ptd-KG n) == LiftUnit-Group)
+    π-above : (k n : ℕ) (tk : k ≠ 0) → (n < k)
+      → π k tk (⊙KG n) == LiftUnit-Group
+    π-above k n tk lt = transport
+      (λ pi → pi k tk (⊙KG n) == LiftUnit-Group)
       π-fold
-      (contr-iso-LiftUnit (π-concrete k (Ptd-KG n)) 
-        (inhab-prop-is-contr 
-          [ idp^ k ] 
+      (contr-iso-LiftUnit (π-concrete k tk (⊙KG n))
+        (inhab-prop-is-contr
+          [ idp^ k ]
           (Trunc-preserves-level ⟨0⟩ (Ω^-level-in ⟨-1⟩ k _
             (raise-level-≤T (lemma lt) (KG-level n))))))
       where lemma : {k n : ℕ} → n < k → S (S (n -2)) ≤T ((k -2) +2+ ⟨-1⟩)
-            lemma ltS = inl (! (+2+-comm _ ⟨-1⟩)) 
-            lemma (ltSR lt) = ≤T-trans (lemma lt) (inr ltS) 
+            lemma ltS = inl (! (+2+-comm _ ⟨-1⟩))
+            lemma (ltSR lt) = ≤T-trans (lemma lt) (inr ltS)
 
   module Spectrum where
 
     private
       module Π₂ = Pi2HSusp A gA cA A-H μcoh
 
-    spectrum₁ : Ptd-Ω (Ptd-KG 2) == Ptd-KG 1
-    spectrum₁ = 
-      Ptd-Ω (Ptd-KG 2)
-        =⟨ ptd-ua (Trunc=-equiv _ _) idp ⟩
-      Ptd-Trunc ⟨ 1 ⟩ (Ptd-Ω (Ptd-Susp X))
-        =⟨ Π₂.ptd-main-lemma ⟩
+    spectrum0 : ⊙Ω (⊙KG 1) == ⊙KG 0
+    spectrum0 =
+      ⊙Ω (⊙KG 1)
+        =⟨ ⊙ua (Trunc=-equiv _ _) idp ⟩
+      ⊙Trunc ⟨ 0 ⟩ (⊙Ω X)
+        =⟨ ⊙ua (unTrunc-equiv _ (gA a₀ a₀)) idp ⟩
+      ⊙Ω X ∎
+
+    spectrum1 : ⊙Ω (⊙KG 2) == ⊙KG 1
+    spectrum1 =
+      ⊙Ω (⊙KG 2)
+        =⟨ ⊙ua (Trunc=-equiv _ _) idp ⟩
+      ⊙Trunc ⟨ 1 ⟩ (⊙Ω (⊙Susp X))
+        =⟨ Π₂.⊙main-lemma ⟩
       X
-        =⟨ ! (ptd-ua (unTrunc-equiv A gA) idp) ⟩
-      Ptd-KG 1 ∎
+        =⟨ ! (⊙ua (unTrunc-equiv _ gA) idp) ⟩
+      ⊙KG 1 ∎
 
     private
       nlemma : (n : ℕ) → Path {A = ℕ₋₂} (S ((n -2) +2+ ⟨0⟩)) (S (S (n -1)))
-      nlemma O = idp 
+      nlemma O = idp
       nlemma (S n) = ap S (nlemma n)
 
-      sconn : (n : ℕ) → is-connected (S (S (n -1))) (fst (Ptd-Susp^ (S n) X))
-      sconn n = transport (λ t → is-connected t (fst (Ptd-Susp^ (S n) X)))
-                          (nlemma n) (Ptd-Susp^-conn (S n) cA)
+      sconn : (n : ℕ) → is-connected (S (S (n -1))) (fst (⊙Susp^ (S n) X))
+      sconn n = transport (λ t → is-connected t (fst (⊙Susp^ (S n) X)))
+                          (nlemma n) (⊙Susp^-conn (S n) cA)
 
       kle : (n : ℕ) → ⟨ S (S n) ⟩ ≤T S ((n -1) +2+ S (n -1))
       kle O = inl idp
-      kle (S n) = ≤T-trans (≤T-ap-S (kle n)) 
-                   (≤T-trans (inl (! (+2+-βr (S n -1) (S n -1)))) 
+      kle (S n) = ≤T-trans (≤T-ap-S (kle n))
+                   (≤T-trans (inl (! (+2+-βr (S n -1) (S n -1))))
                                (inr ltS))
 
-      module FS (n : ℕ) = 
+      module FS (n : ℕ) =
         FreudenthalEquiv (n -1) (⟨ S (S n) ⟩) (kle n)
-          (fst (Ptd-Susp^ (S n) X)) (snd (Ptd-Susp^ (S n) X)) (sconn n)
+          (fst (⊙Susp^ (S n) X)) (snd (⊙Susp^ (S n) X)) (sconn n)
 
     spectrumSS : (n : ℕ)
-      → Ptd-Ω (Ptd-KG (S (S (S n)))) == Ptd-KG (S (S n))
-    spectrumSS n = 
-      Ptd-Ω (Ptd-KG (S (S (S n))))
-        =⟨ ptd-ua (Trunc=-equiv _ _) idp ⟩
-      Ptd-Trunc ⟨ S (S n) ⟩ (Ptd-Ω (Ptd-Susp^ (S (S n)) X))
-        =⟨ ! (FS.ptd-path n) ⟩
-      Ptd-KG (S (S n)) ∎
+      → ⊙Ω (⊙KG (S (S (S n)))) == ⊙KG (S (S n))
+    spectrumSS n =
+      ⊙Ω (⊙KG (S (S (S n))))
+        =⟨ ⊙ua (Trunc=-equiv _ _) idp ⟩
+      ⊙Trunc ⟨ S (S n) ⟩ (⊙Ω (⊙Susp^ (S (S n)) X))
+        =⟨ ! (FS.⊙path n) ⟩
+      ⊙KG (S (S n)) ∎
 
     abstract
-      spectrum : (n : ℕ) ⦃ pn : n ≠ 0 ⦄ → Ptd-Ω (Ptd-KG (S n)) == Ptd-KG n
-      spectrum 0 ⦃ pn ⦄ = ⊥-rec (pn idp)
-      spectrum 1 ⦃ _ ⦄ = spectrum₁
-      spectrum (S (S n)) ⦃ _ ⦄ = spectrumSS n
-  
+      spectrum : (n : ℕ) → ⊙Ω (⊙KG (S n)) == ⊙KG n
+      spectrum 0 = spectrum0
+      spectrum 1 = spectrum1
+      spectrum (S (S n)) = spectrumSS n
+
 module KGnExplicit {i} (G : Group i) (G-abelian : is-abelian G) where
-  module K1 = KG1 G 
+  module K1 = KG1 G
   module HSpace = KG1HSpace G G-abelian
   module Kn = KGnImplicit K1.KG1 K1.KG1-conn K1.klevel HSpace.H-KG1 HSpace.μcoh
 
-  open Kn public 
-  open Kn.BelowDiagonal public using (π-below)
+  open Kn public
 
-  π-diag : (n : ℕ) → ⦃ pn : n ≠ 0 ⦄ → ⦃ p1 : 1 ≠ O ⦄
-    → π n ⦃ pn ⦄ (Ptd-KG n) == G --π 1 ⦃ p1 ⦄ X
-  π-diag n ⦃ pn ⦄ ⦃ p1 ⦄ = 
-    Kn.OnDiagonal.π-diag n ⦃ pn ⦄ ⦃ p1 ⦄ ∙ K1.π₁.π₁-iso ⦃ p1 ⦄
+  open BelowDiagonal public using (π-below)
 
-  open Kn.AboveDiagonal public using (π-above)
-  open Kn.Spectrum public using (spectrum)
+  π-diag : (n : ℕ) (tn : n ≠ 0) → π n tn (⊙KG n) == G
+  π-diag n tn =
+    OnDiagonal.π-diag n tn (ℕ-S≠O 0) ∙ K1.π₁.π₁-iso
+
+  open AboveDiagonal public using (π-above)
+  open Spectrum public -- using (spectrum)

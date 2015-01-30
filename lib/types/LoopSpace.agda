@@ -1,93 +1,191 @@
 {-# OPTIONS --without-K #-}
 
 open import lib.Basics
+open import lib.NConnected
 open import lib.types.Nat
 open import lib.types.TLevel
 open import lib.types.Empty
-open import lib.types.Pi
-open import lib.types.Truncation
-open import lib.types.Pointed
 open import lib.types.Group
+open import lib.types.Pi
+open import lib.types.Pointed
+open import lib.types.Paths
+open import lib.types.Sigma
+open import lib.types.Truncation
+open import lib.cubical.Square
 
 module lib.types.LoopSpace where
 
 module _ {i} where
 
-  Ptd-Ω : Ptd i → Ptd i
-  Ptd-Ω (A , a) = ∙[ (a == a) , idp ]
+  ⊙Ω : Ptd i → Ptd i
+  ⊙Ω (A , a) = ⊙[ (a == a) , idp ]
 
   Ω : Ptd i → Type i
-  Ω = fst ∘ Ptd-Ω
+  Ω = fst ∘ ⊙Ω
 
-  Ptd-Ω^ : (n : ℕ) → Ptd i → Ptd i
-  Ptd-Ω^ O X = X
-  Ptd-Ω^ (S n) X = Ptd-Ω (Ptd-Ω^ n X)
+  ⊙Ω^ : (n : ℕ) → Ptd i → Ptd i
+  ⊙Ω^ O X = X
+  ⊙Ω^ (S n) X = ⊙Ω (⊙Ω^ n X)
 
   Ω^ : (n : ℕ) → Ptd i → Type i
-  Ω^ n X = fst (Ptd-Ω^ n X)
+  Ω^ n X = fst (⊙Ω^ n X)
 
 idp^ : ∀ {i} (n : ℕ) {X : Ptd i} → Ω^ n X
-idp^ n {X} = snd (Ptd-Ω^ n X)
+idp^ n {X} = snd (⊙Ω^ n X)
 
 {- for n ≥ 1, we have a group structure on the loop space -}
 module _ {i} where
-  !^ : (n : ℕ) ⦃ _ : n ≠ O ⦄ {X : Ptd i} → Ω^ n X → Ω^ n X
-  !^ O ⦃ posi ⦄ = ⊥-rec (posi idp)
-  !^ (S n) ⦃ _ ⦄ = !
+  !^ : (n : ℕ) (t : n ≠ O) {X : Ptd i} → Ω^ n X → Ω^ n X
+  !^ O t = ⊥-rec (t idp)
+  !^ (S n) _ = !
 
-  conc^ : (n : ℕ) ⦃ _ : n ≠ O ⦄ {X : Ptd i} → Ω^ n X → Ω^ n X → Ω^ n X
-  conc^ O ⦃ posi ⦄ = ⊥-rec (posi idp)
-  conc^ (S n) ⦃ _ ⦄ = _∙_
+  conc^ : (n : ℕ) (t : n ≠ O) {X : Ptd i} → Ω^ n X → Ω^ n X → Ω^ n X
+  conc^ O t = ⊥-rec (t idp)
+  conc^ (S n) _ = _∙_
+
+{- ap and ap2 for pointed functions -}
+
+⊙ap : ∀ {i j} {X : Ptd i} {Y : Ptd j}
+  → fst (X ⊙→ Y) → fst (⊙Ω X ⊙→ ⊙Ω Y)
+⊙ap (f , fpt) = ((λ p → ! fpt ∙ ap f p ∙ fpt) , !-inv-l fpt)
+
+⊙ap2 : ∀ {i j k} {X : Ptd i} {Y : Ptd j} {Z : Ptd k}
+  → fst (X ⊙× Y ⊙→ Z) → fst (⊙Ω X ⊙× ⊙Ω Y ⊙→ ⊙Ω Z)
+⊙ap2 (f , fpt) = ((λ {(p , q) → ! fpt ∙ ap2 (curry f) p q ∙ fpt}) ,
+                  !-inv-l fpt)
+
+⊙ap-idf : ∀ {i} {X : Ptd i} → ⊙ap (⊙idf X) == ⊙idf _
+⊙ap-idf = pair= (λ= $ λ p → ∙-unit-r _ ∙ ap-idf p)
+                (↓-app=cst-from-square $ vert-degen-square $ app=-β _ _)
+
+⊙ap2-fst : ∀ {i j} {X : Ptd i} {Y : Ptd j}
+  → ⊙ap2 {X = X} {Y = Y} ⊙fst == ⊙fst
+⊙ap2-fst = pair= (λ= (λ {(p , q) → ∙-unit-r _ ∙ ap2-fst p q}))
+                 (↓-app=cst-from-square $ vert-degen-square $ app=-β _ _)
+
+⊙ap2-snd : ∀ {i j} {X : Ptd i} {Y : Ptd j}
+  → ⊙ap2 {X = X} {Y = Y} ⊙snd == ⊙snd
+⊙ap2-snd = pair= (λ= (λ {(p , q) → ∙-unit-r _ ∙ ap2-snd p q}))
+                 (↓-app=cst-from-square $ vert-degen-square $ app=-β _ _)
+
+
+⊙ap-ap2 : ∀ {i j k l} {X : Ptd i} {Y : Ptd j} {Z : Ptd k} {W : Ptd l}
+  (G : fst (Z ⊙→ W)) (F : fst (X ⊙× Y ⊙→ Z))
+  → ⊙ap G ⊙∘ ⊙ap2 F == ⊙ap2 (G ⊙∘ F)
+⊙ap-ap2 (g , idp) (f , idp) = pair=
+  (λ= $ λ {(p , q) →
+         ap (λ w → w ∙ idp) (ap (ap g) (∙-unit-r _) ∙ ap-ap2 g (curry f) p q)})
+  (↓-app=cst-from-square $ vert-degen-square $ app=-β _ _)
+
+⊙ap2-ap : ∀ {i j k l m}
+  {X : Ptd i} {Y : Ptd j} {U : Ptd k} {V : Ptd l} {Z : Ptd m}
+  (G : fst ((U ⊙× V) ⊙→ Z)) (F₁ : fst (X ⊙→ U)) (F₂ : fst (Y ⊙→ V))
+  → ⊙ap2 G ⊙∘ pair⊙→ (⊙ap F₁) (⊙ap F₂) == ⊙ap2 (G ⊙∘ pair⊙→ F₁ F₂)
+⊙ap2-ap (g , idp) (f₁ , idp) (f₂ , idp) = pair=
+  (λ= $ λ {(p , q) →
+    ∙-unit-r _
+    ∙ ap2 (ap2 (curry g)) (∙-unit-r _) (∙-unit-r _)
+    ∙ ap2-ap-l (curry g) f₁ p (ap f₂ q)
+    ∙ ap2-ap-r (λ x v → g (f₁ x , v)) f₂ p q
+    ∙ ! (∙-unit-r _)})
+  (↓-app=cst-from-square $ vert-degen-square $ app=-β _ _)
+
+⊙ap2-diag : ∀ {i j} {X : Ptd i} {Y : Ptd j} (F : fst (X ⊙× X ⊙→ Y))
+  → ⊙ap2 F ⊙∘ ⊙diag == ⊙ap (F ⊙∘ ⊙diag)
+⊙ap2-diag (f , idp) = pair=
+  (λ= $ λ p → ∙-unit-r _ ∙ ap2-diag (curry f) p ∙ ! (∙-unit-r _))
+  (↓-app=cst-from-square $ vert-degen-square $ app=-β _ _)
+
+{- ap and ap2 for higher loop spaces -}
 
 ap^ : ∀ {i j} (n : ℕ) {X : Ptd i} {Y : Ptd j}
-  → fst (X ∙→ Y) → fst (Ptd-Ω^ n X ∙→ Ptd-Ω^ n Y)
+  → fst (X ⊙→ Y) → fst (⊙Ω^ n X ⊙→ ⊙Ω^ n Y)
 ap^ O F = F
-ap^ (S n) F = 
-  let (g , gpt) = ap^ n F
-  in (λ p → ! gpt ∙ ap g p ∙ gpt), !-inv-l gpt
+ap^ (S n) F = ⊙ap (ap^ n F)
 
-module _ {i} {X : Ptd i} where 
+ap2^ : ∀ {i j k} (n : ℕ) {X : Ptd i} {Y : Ptd j} {Z : Ptd k}
+  → fst ((X ⊙× Y) ⊙→ Z)
+  → fst ((⊙Ω^ n X ⊙× ⊙Ω^ n Y) ⊙→ ⊙Ω^ n Z)
+ap2^ O F = F
+ap2^ (S n) F = ⊙ap2 (ap2^ n F)
 
-  {- Prove these as lemmas now 
+ap^-idf : ∀ {i} (n : ℕ) {X : Ptd i} → ap^ n (⊙idf X) == ⊙idf _
+ap^-idf O = idp
+ap^-idf (S n) = ap ⊙ap (ap^-idf n) ∙ ⊙ap-idf
+
+ap^-ap2^ : ∀ {i j k l} (n : ℕ) {X : Ptd i} {Y : Ptd j} {Z : Ptd k} {W : Ptd l}
+  (G : fst (Z ⊙→ W)) (F : fst ((X ⊙× Y) ⊙→ Z))
+  → ap^ n G ⊙∘ ap2^ n F == ap2^ n (G ⊙∘ F)
+ap^-ap2^ O G F = idp
+ap^-ap2^ (S n) G F = ⊙ap-ap2 (ap^ n G) (ap2^ n F) ∙ ap ⊙ap2 (ap^-ap2^ n G F)
+
+ap2^-fst : ∀ {i j} (n : ℕ) {X : Ptd i} {Y : Ptd j}
+  → ap2^ n {X} {Y} ⊙fst == ⊙fst
+ap2^-fst O = idp
+ap2^-fst (S n) = ap ⊙ap2 (ap2^-fst n) ∙ ⊙ap2-fst
+
+ap2^-snd : ∀ {i j} (n : ℕ) {X : Ptd i} {Y : Ptd j}
+  → ap2^ n {X} {Y} ⊙snd == ⊙snd
+ap2^-snd O = idp
+ap2^-snd (S n) = ap ⊙ap2 (ap2^-snd n) ∙ ⊙ap2-snd
+
+ap2^-ap^ : ∀ {i j k l m} (n : ℕ)
+  {X : Ptd i} {Y : Ptd j} {U : Ptd k} {V : Ptd l} {Z : Ptd m}
+  (G : fst ((U ⊙× V) ⊙→ Z)) (F₁ : fst (X ⊙→ U)) (F₂ : fst (Y ⊙→ V))
+  → ap2^ n G ⊙∘ pair⊙→ (ap^ n F₁) (ap^ n F₂) == ap2^ n (G ⊙∘ pair⊙→ F₁ F₂)
+ap2^-ap^ O G F₁ F₂ = idp
+ap2^-ap^ (S n) G F₁ F₂ =
+  ⊙ap2-ap (ap2^ n G) (ap^ n F₁) (ap^ n F₂) ∙ ap ⊙ap2 (ap2^-ap^ n G F₁ F₂)
+
+ap2^-diag : ∀ {i j} (n : ℕ) {X : Ptd i} {Y : Ptd j} (F : fst (X ⊙× X ⊙→ Y))
+  → ap2^ n F ⊙∘ ⊙diag == ap^ n (F ⊙∘ ⊙diag)
+ap2^-diag O F = idp
+ap2^-diag (S n) F = ⊙ap2-diag (ap2^ n F) ∙ ap ⊙ap (ap2^-diag n F)
+
+
+module _ {i} {X : Ptd i} where
+
+  {- Prove these as lemmas now
    - so we don't have to deal with the n = O case later -}
 
-  conc^-unit-l : (n : ℕ) ⦃ _ : n ≠ O ⦄ (q : Ω^ n X) 
-    → (conc^ n (idp^ n) q) == q
-  conc^-unit-l O ⦃ posi ⦄ _ = ⊥-rec (posi idp)
-  conc^-unit-l (S n) _ = idp
+  conc^-unit-l : (n : ℕ) (t : n ≠ O) (q : Ω^ n X)
+    → (conc^ n t (idp^ n) q) == q
+  conc^-unit-l O t _ = ⊥-rec (t idp)
+  conc^-unit-l (S n) _ _ = idp
 
-  conc^-unit-r : (n : ℕ) ⦃ _ : n ≠ O ⦄ (q : Ω^ n X) 
-    → (conc^ n q (idp^ n)) == q
-  conc^-unit-r O ⦃ posi ⦄ = ⊥-rec (posi idp)
-  conc^-unit-r (S n) ⦃ _ ⦄ = ∙-unit-r 
+  conc^-unit-r : (n : ℕ) (t : n ≠ O) (q : Ω^ n X)
+    → (conc^ n t q (idp^ n)) == q
+  conc^-unit-r O t = ⊥-rec (t idp)
+  conc^-unit-r (S n) _ = ∙-unit-r
 
-  conc^-assoc : (n : ℕ) ⦃ _ : n ≠ O ⦄ (p q r : Ω^ n X) 
-    → conc^ n (conc^ n p q) r == conc^ n p (conc^ n q r)
-  conc^-assoc O ⦃ posi ⦄ = ⊥-rec (posi idp)
-  conc^-assoc (S n) ⦃ _ ⦄ = ∙-assoc
+  conc^-assoc : (n : ℕ) (t : n ≠ O) (p q r : Ω^ n X)
+    → conc^ n t (conc^ n t p q) r == conc^ n t p (conc^ n t q r)
+  conc^-assoc O t = ⊥-rec (t idp)
+  conc^-assoc (S n) _ = ∙-assoc
 
-  !^-inv-l : (n : ℕ) ⦃ _ : n ≠ O ⦄ (p : Ω^ n X)
-    → conc^ n (!^ n p) p == idp^ n
-  !^-inv-l O ⦃ posi ⦄ = ⊥-rec (posi idp)
-  !^-inv-l (S n) ⦃ _ ⦄ = !-inv-l
+  !^-inv-l : (n : ℕ) (t : n ≠ O) (p : Ω^ n X)
+    → conc^ n t (!^ n t p) p == idp^ n
+  !^-inv-l O t = ⊥-rec (t idp)
+  !^-inv-l (S n) _ = !-inv-l
 
-  !^-inv-r : (n : ℕ) ⦃ _ : n ≠ O ⦄ (p : Ω^ n X)
-    → conc^ n p (!^ n p) == idp^ n
-  !^-inv-r O ⦃ posi ⦄ = ⊥-rec (posi idp)
-  !^-inv-r (S n) ⦃ _ ⦄ = !-inv-r
+  !^-inv-r : (n : ℕ) (t : n ≠ O) (p : Ω^ n X)
+    → conc^ n t p (!^ n t p) == idp^ n
+  !^-inv-r O t = ⊥-rec (t idp)
+  !^-inv-r (S n) _ = !-inv-r
 
 abstract
-  ap^-conc^ : ∀ {i j} (n : ℕ) ⦃ _ : n ≠ O ⦄ 
-    {X : Ptd i} {Y : Ptd j} (F : fst (X ∙→ Y)) (p q : Ω^ n X)
-    → fst (ap^ n F) (conc^ n p q) == conc^ n (fst (ap^ n F) p) (fst (ap^ n F) q)
-  ap^-conc^ O ⦃ posi ⦄ _ _ _ = ⊥-rec (posi idp)
-  ap^-conc^ (S n) ⦃ _ ⦄ {X = X} {Y = Y} F p q =
+  ap^-conc^ : ∀ {i j} (n : ℕ) (t : n ≠ O)
+    {X : Ptd i} {Y : Ptd j} (F : fst (X ⊙→ Y)) (p q : Ω^ n X)
+    → fst (ap^ n F) (conc^ n t p q)
+      == conc^ n t (fst (ap^ n F) p) (fst (ap^ n F) q)
+  ap^-conc^ O t _ _ _ = ⊥-rec (t idp)
+  ap^-conc^ (S n) _ {X = X} {Y = Y} F p q =
     ! gpt ∙ ap g (p ∙ q) ∙ gpt
       =⟨ ap-∙ g p q |in-ctx (λ w → ! gpt ∙ w ∙ gpt) ⟩
     ! gpt ∙ (ap g p ∙ ap g q) ∙ gpt
       =⟨ lemma (ap g p) (ap g q) gpt ⟩
     (! gpt ∙ ap g p ∙ gpt) ∙ (! gpt ∙ ap g q ∙ gpt) ∎
-    where 
+    where
     g : Ω^ n X → Ω^ n Y
     g = fst (ap^ n F)
 
@@ -102,109 +200,116 @@ abstract
 {- ap^ preserves (pointed) equivalences -}
 module _ {i j} {X : Ptd i} {Y : Ptd j} where
 
-  is-equiv-ap^ : (n : ℕ) (F : fst (X ∙→ Y)) (e : is-equiv (fst F))
+  is-equiv-ap^ : (n : ℕ) (F : fst (X ⊙→ Y)) (e : is-equiv (fst F))
     → is-equiv (fst (ap^ n F))
   is-equiv-ap^ O F e = e
-  is-equiv-ap^ (S n) F e = 
+  is-equiv-ap^ (S n) F e =
          pre∙-is-equiv (! (snd (ap^ n F)))
-    ∘ise post∙-is-equiv (snd (ap^ n F)) 
+    ∘ise post∙-is-equiv (snd (ap^ n F))
     ∘ise snd (equiv-ap (_ , is-equiv-ap^ n F e) _ _)
 
-  equiv-ap^ : (n : ℕ) (F : fst (X ∙→ Y)) (e : is-equiv (fst F)) 
+  equiv-ap^ : (n : ℕ) (F : fst (X ⊙→ Y)) (e : is-equiv (fst F))
     → Ω^ n X ≃ Ω^ n Y
   equiv-ap^ n F e = (fst (ap^ n F) , is-equiv-ap^ n F e)
 
 Ω^-level-in : ∀ {i} (m : ℕ₋₂) (n : ℕ) (X : Ptd i)
   → (has-level ((n -2) +2+ m) (fst X) → has-level m (Ω^ n X))
 Ω^-level-in m O X pX = pX
-Ω^-level-in m (S n) X pX = 
-  Ω^-level-in (S m) n X 
-    (transport (λ k → has-level k (fst X)) (! (+2+-βr (n -2) m)) pX) 
+Ω^-level-in m (S n) X pX =
+  Ω^-level-in (S m) n X
+    (transport (λ k → has-level k (fst X)) (! (+2+-βr (n -2) m)) pX)
     (idp^ n) (idp^ n)
+
+Ω^-conn-in : ∀ {i} (m : ℕ₋₂) (n : ℕ) (X : Ptd i)
+  → (is-connected ((n -2) +2+ m) (fst X)) → is-connected m (Ω^ n X)
+Ω^-conn-in m O X pX = pX
+Ω^-conn-in m (S n) X pX =
+  path-conn $ Ω^-conn-in (S m) n X $
+    transport (λ k → is-connected k (fst X)) (! (+2+-βr (n -2) m)) pX
 
 {- Eckmann-Hilton argument -}
 module _ {i} {X : Ptd i} where
 
-  conc^2-comm : (α β : Ω^ 2 X) → conc^ 2 α β == conc^ 2 β α
+  conc^2-comm : (α β : Ω^ 2 X) → conc^ 2 (ℕ-S≠O _) α β == conc^ 2 (ℕ-S≠O _) β α
   conc^2-comm α β = ! (⋆2=conc^ α β) ∙ ⋆2=⋆'2 α β ∙ ⋆'2=conc^ α β
     where
-      ⋆2=conc^ : (α β : Ω^ 2 X) → α ⋆2 β == conc^ 2 α β
+      ⋆2=conc^ : (α β : Ω^ 2 X) → α ⋆2 β == conc^ 2 (ℕ-S≠O _) α β
       ⋆2=conc^ α β = ap (λ π → π ∙ β) (∙-unit-r α)
 
-      ⋆'2=conc^ : (α β : Ω^ 2  X) → α ⋆'2 β == conc^ 2 β α
+      ⋆'2=conc^ : (α β : Ω^ 2  X) → α ⋆'2 β == conc^ 2 (ℕ-S≠O _) β α
       ⋆'2=conc^ α β = ap (λ π → β ∙ π) (∙-unit-r α)
 
 {- Pushing truncation through loop space -}
 module _ {i} where
 
   Trunc-Ω^ : (m : ℕ₋₂) (n : ℕ) (X : Ptd i)
-    → Ptd-Trunc m (Ptd-Ω^ n X) == Ptd-Ω^ n (Ptd-Trunc ((n -2) +2+ m) X)
+    → ⊙Trunc m (⊙Ω^ n X) == ⊙Ω^ n (⊙Trunc ((n -2) +2+ m) X)
   Trunc-Ω^ m O X = idp
-  Trunc-Ω^ m (S n) X = 
-    Ptd-Trunc m (Ptd-Ω^ (S n) X)
+  Trunc-Ω^ m (S n) X =
+    ⊙Trunc m (⊙Ω^ (S n) X)
       =⟨ ! (pair= (Trunc=-path [ _ ] [ _ ]) (↓-idf-ua-in _ idp)) ⟩
-    Ptd-Ω (Ptd-Trunc (S m) (Ptd-Ω^ n X))
-      =⟨ ap Ptd-Ω (Trunc-Ω^ (S m) n X) ⟩
-    Ptd-Ω^ (S n) (Ptd-Trunc ((n -2) +2+ S m) X) 
-      =⟨ +2+-βr (n -2) m |in-ctx (λ k → Ptd-Ω^ (S n) (Ptd-Trunc k X)) ⟩
-    Ptd-Ω^ (S n) (Ptd-Trunc (S (n -2) +2+ m) X) ∎
+    ⊙Ω (⊙Trunc (S m) (⊙Ω^ n X))
+      =⟨ ap ⊙Ω (Trunc-Ω^ (S m) n X) ⟩
+    ⊙Ω^ (S n) (⊙Trunc ((n -2) +2+ S m) X)
+      =⟨ +2+-βr (n -2) m |in-ctx (λ k → ⊙Ω^ (S n) (⊙Trunc k X)) ⟩
+    ⊙Ω^ (S n) (⊙Trunc (S (n -2) +2+ m) X) ∎
 
   Ω-Trunc-equiv : (m : ℕ₋₂) (X : Ptd i)
-    → Ω (Ptd-Trunc (S m) X) ≃ Trunc m (Ω X)
+    → Ω (⊙Trunc (S m) X) ≃ Trunc m (Ω X)
   Ω-Trunc-equiv m X = Trunc=-equiv [ snd X ] [ snd X ]
 
 {- A loop space is a pregroup, and a group if it has the right level -}
-module _ {i} (n : ℕ) ⦃ _ : n ≠ O ⦄ (X : Ptd i) where
+module _ {i} (n : ℕ) (t : n ≠ O) (X : Ptd i) where
 
   Ω^-group-structure : GroupStructure (Ω^ n X)
   Ω^-group-structure = record {
     ident = idp^ n;
-    inv = !^ n;
-    comp = conc^ n;
-    unitl = conc^-unit-l n;
-    unitr = conc^-unit-r n;
-    assoc = conc^-assoc n;
-    invr = !^-inv-r n;
-    invl = !^-inv-l n
+    inv = !^ n t;
+    comp = conc^ n t;
+    unitl = conc^-unit-l n t;
+    unitr = conc^-unit-r n t;
+    assoc = conc^-assoc n t;
+    invr = !^-inv-r n t;
+    invl = !^-inv-l n t
     }
 
   Ω^-Group : has-level ⟨ n ⟩ (fst X) → Group i
-  Ω^-Group pX = group 
+  Ω^-Group pX = group
     (Ω^ n X)
     (Ω^-level-in ⟨0⟩ n X $
        transport (λ t → has-level t (fst X)) (+2+-comm ⟨0⟩ (n -2)) pX)
     Ω^-group-structure
 
 {- Our definition of Ω^ builds up loops on the outside,
- - but this is equivalent to building up on the inside -}  
+ - but this is equivalent to building up on the inside -}
 module _ {i} where
-  Ptd-Ω^-inner-path : (n : ℕ) (X : Ptd i)
-    → Ptd-Ω^ (S n) X == Ptd-Ω^ n (Ptd-Ω X)
-  Ptd-Ω^-inner-path O X = idp
-  Ptd-Ω^-inner-path (S n) X = ap Ptd-Ω (Ptd-Ω^-inner-path n X)
+  ⊙Ω^-inner-path : (n : ℕ) (X : Ptd i)
+    → ⊙Ω^ (S n) X == ⊙Ω^ n (⊙Ω X)
+  ⊙Ω^-inner-path O X = idp
+  ⊙Ω^-inner-path (S n) X = ap ⊙Ω (⊙Ω^-inner-path n X)
 
-  Ptd-Ω^-inner-out : (n : ℕ) (X : Ptd i)
-    → fst (Ptd-Ω^ (S n) X ∙→ Ptd-Ω^ n (Ptd-Ω X))
-  Ptd-Ω^-inner-out O _ = (idf _ , idp)
-  Ptd-Ω^-inner-out (S n) X = ap^ 1 (Ptd-Ω^-inner-out n X)
+  ⊙Ω^-inner-out : (n : ℕ) (X : Ptd i)
+    → fst (⊙Ω^ (S n) X ⊙→ ⊙Ω^ n (⊙Ω X))
+  ⊙Ω^-inner-out O _ = (idf _ , idp)
+  ⊙Ω^-inner-out (S n) X = ap^ 1 (⊙Ω^-inner-out n X)
 
   Ω^-inner-out : (n : ℕ) (X : Ptd i)
-    → (Ω^ (S n) X → Ω^ n (Ptd-Ω X))
-  Ω^-inner-out n X = fst (Ptd-Ω^-inner-out n X)
+    → (Ω^ (S n) X → Ω^ n (⊙Ω X))
+  Ω^-inner-out n X = fst (⊙Ω^-inner-out n X)
 
-  Ω^-inner-out-conc^ : (n : ℕ) ⦃ _ : n ≠ O ⦄ (X : Ptd i) (p q : Ω^ (S n) X)
-    → Ω^-inner-out n X (conc^ (S n) p q) 
-      == conc^ n (Ω^-inner-out n X p) (Ω^-inner-out n X q)
-  Ω^-inner-out-conc^ O ⦃ posi ⦄ X _ _ = ⊥-rec (posi idp)
-  Ω^-inner-out-conc^ (S n) ⦃ _ ⦄ X p q = 
-    ap^-conc^ 1 (Ptd-Ω^-inner-out n X) p q
+  Ω^-inner-out-conc^ : (n : ℕ) (t : n ≠ O)
+    (X : Ptd i) (p q : Ω^ (S n) X)
+    → Ω^-inner-out n X (conc^ (S n) (ℕ-S≠O _) p q)
+      == conc^ n t (Ω^-inner-out n X p) (Ω^-inner-out n X q)
+  Ω^-inner-out-conc^ O t X _ _ = ⊥-rec (t idp)
+  Ω^-inner-out-conc^ (S n) t X p q =
+    ap^-conc^ 1 (ℕ-S≠O _) (⊙Ω^-inner-out n X) p q
 
   Ω^-inner-is-equiv : (n : ℕ) (X : Ptd i)
-    → is-equiv (fst (Ptd-Ω^-inner-out n X))
+    → is-equiv (fst (⊙Ω^-inner-out n X))
   Ω^-inner-is-equiv O X = is-eq (idf _) (idf _) (λ _ → idp) (λ _ → idp)
-  Ω^-inner-is-equiv (S n) X = 
-    is-equiv-ap^ 1 (Ptd-Ω^-inner-out n X) (Ω^-inner-is-equiv n X)
+  Ω^-inner-is-equiv (S n) X =
+    is-equiv-ap^ 1 (⊙Ω^-inner-out n X) (Ω^-inner-is-equiv n X)
 
-  Ω^-inner-equiv : (n : ℕ) (X : Ptd i) → Ω^ (S n) X ≃ Ω^ n (Ptd-Ω X)
+  Ω^-inner-equiv : (n : ℕ) (X : Ptd i) → Ω^ (S n) X ≃ Ω^ n (⊙Ω X)
   Ω^-inner-equiv n X = _ , Ω^-inner-is-equiv n X
-

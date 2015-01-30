@@ -4,6 +4,8 @@ open import lib.Basics
 open import lib.types.Sigma
 open import lib.types.Pi
 open import lib.types.Paths
+open import lib.types.Unit
+open import lib.types.Empty
 
 module lib.Equivalences2 where
 
@@ -11,19 +13,30 @@ module lib.Equivalences2 where
 module _ {i j k} {A : Type i} {B : Type j} {C : Type k}
          {h : A → B} (e : is-equiv h) where
 
-  pre∘-is-equiv : is-equiv (λ (k : C → A) → h ∘ k)
+  pre∘-is-equiv : is-equiv (λ (k : B → C) → k ∘ h)
   pre∘-is-equiv = is-eq f g f-g g-f
+    where f = λ k → k ∘ h
+          g = λ k → k ∘ is-equiv.g e
+          f-g = λ k → ap (λ q → λ x → k (q x)) (λ= $ is-equiv.g-f e)
+          g-f = λ k → ap (λ q → λ x → k (q x)) (λ= $ is-equiv.f-g e)
+
+  post∘-is-equiv : is-equiv (λ (k : C → A) → h ∘ k)
+  post∘-is-equiv = is-eq f g f-g g-f
     where f = λ k → h ∘ k
           g = λ k → is-equiv.g e ∘ k
           f-g = λ k → ap (λ q → q ∘ k) (λ= $ is-equiv.f-g e)
           g-f = λ k → ap (λ q → q ∘ k) (λ= $ is-equiv.g-f e)
 
-  post∘-is-equiv : is-equiv (λ (k : B → C) → k ∘ h)
-  post∘-is-equiv = is-eq f g f-g g-f
-    where f = λ k → k ∘ h
-          g = λ k → k ∘ is-equiv.g e
-          f-g = λ k → ap (λ q → λ x → k (q x)) (λ= $ is-equiv.g-f e)
-          g-f = λ k → ap (λ q → λ x → k (q x)) (λ= $ is-equiv.f-g e)
+{- The same thing on the abstraction level of equivalences -}
+module _ {i j k} {A : Type i} {B : Type j} {C : Type k}
+         (e : A ≃ B) where
+
+  pre∘-equiv : (B → C) ≃ (A → C)
+  pre∘-equiv = (_ , pre∘-is-equiv (snd e))
+
+  post∘-equiv : (C → A) ≃ (C → B)
+  post∘-equiv = (_ , post∘-is-equiv (snd e))
+
 
 is-contr-map : ∀ {i j} {A : Type i} {B : Type j} (f : A → B)
   → Type (lmax i j)
@@ -69,11 +82,11 @@ module _ {i j} {A : Type i} {B : Type j} {f : A → B} (e : is-equiv f) where
 
   equiv-linv-is-contr : is-contr (linv f)
   equiv-linv-is-contr = equiv-preserves-level (equiv-Σ-snd (λ _ → λ=-equiv ⁻¹))
-                          (equiv-is-contr-map (post∘-is-equiv e) (idf A))
+                          (equiv-is-contr-map (pre∘-is-equiv e) (idf A))
 
   equiv-rinv-is-contr : is-contr (rinv f)
   equiv-rinv-is-contr = equiv-preserves-level (equiv-Σ-snd (λ _ → λ=-equiv ⁻¹))
-                          (equiv-is-contr-map (pre∘-is-equiv e) (idf B))
+                          (equiv-is-contr-map (post∘-is-equiv e) (idf B))
 
 module _ {i j} {A : Type i} {B : Type j} {f : A → B} where
 
@@ -124,3 +137,14 @@ ua-∘e =
   equiv-induction
     (λ {A} {B} e₁ → ∀ {C} → ∀ (e₂ : B ≃ C) → ua (e₂ ∘e e₁) == ua e₁ ∙ ua e₂)
     (λ A → λ e₂ → ap ua (∘e-unit-r e₂) ∙ ap (λ w → (w ∙ ua e₂)) (! (ua-η idp)))
+
+{- Type former equivalences involving Empty may require λ=. -}
+module _ {j} {B : Empty → Type j} where
+  Σ₁-Empty : Σ Empty B ≃ Empty
+  Σ₁-Empty = equiv (⊥-rec ∘ fst) ⊥-rec ⊥-elim (⊥-rec ∘ fst)
+
+  Π₁-Empty : Π Empty B ≃ Unit
+  Π₁-Empty = equiv (cst tt) (cst ⊥-elim) (λ _ → contr-has-all-paths Unit-is-contr _ _) (λ _ → λ= ⊥-elim)
+
+Σ₂-Empty : ∀ {i} {A : Type i} → Σ A (λ _ → Empty) ≃ Empty
+Σ₂-Empty = equiv (⊥-rec ∘ snd) ⊥-rec ⊥-elim (⊥-rec ∘ snd)

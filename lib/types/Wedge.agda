@@ -1,11 +1,12 @@
 {-# OPTIONS --without-K #-}
 
 open import lib.Basics
-open import lib.types.Span
+open import lib.types.Coproduct
+open import lib.types.Pointed
 open import lib.types.Pushout
 open import lib.types.PushoutFlattening
+open import lib.types.Span
 open import lib.types.Unit
-open import lib.types.Pointed
 
 -- Wedge of two pointed types is defined as a particular case of pushout
 
@@ -19,12 +20,14 @@ module _ {i j} (X : Ptd i) (Y : Ptd j) where
   Wedge : Type (lmax i j)
   Wedge = Pushout wedge-span
 
+  _∨_ = Wedge
+
 module _ {i j} {X : Ptd i} {Y : Ptd j} where
 
-  winl : fst X → Wedge X Y
+  winl : fst X → X ∨ Y
   winl x = left x
 
-  winr : fst Y → Wedge X Y
+  winr : fst Y → X ∨ Y
   winr y = right y
 
   wglue : winl (snd X) == winr (snd Y)
@@ -32,30 +35,58 @@ module _ {i j} {X : Ptd i} {Y : Ptd j} where
 
 module _ {i j} (X : Ptd i) (Y : Ptd j) where
 
-  Ptd-Wedge : Ptd (lmax i j)
-  Ptd-Wedge = ∙[ Wedge X Y , winl (snd X) ]
+  ⊙Wedge : Ptd (lmax i j)
+  ⊙Wedge = ⊙[ Wedge X Y , winl (snd X) ]
+
+  _⊙∨_ = ⊙Wedge
 
 module _ {i j} {X : Ptd i} {Y : Ptd j} where
 
-  ptd-winl : fst (X ∙→ Ptd-Wedge X Y)
-  ptd-winl = (winl , idp)
+  ⊙winl : fst (X ⊙→ X ⊙∨ Y)
+  ⊙winl = (winl , idp)
 
-  ptd-winr : fst (Y ∙→ Ptd-Wedge X Y)
-  ptd-winr = (winr , ! wglue)
+  ⊙winr : fst (Y ⊙→ X ⊙∨ Y)
+  ⊙winr = (winr , ! wglue)
 
 module _ {i j} {X : Ptd i} {Y : Ptd j} where
 
-  module WedgeElim {k} {P : Wedge X Y → Type k}
-    (f : (x : fst X) → P (winl x)) (g : (y : fst Y) → P (winr y))
-    (p : f (snd X) == g (snd Y) [ P ↓ wglue ])
-    = PushoutElim f g (λ _ → p)
+  module WedgeElim {k} {P : X ∨ Y → Type k}
+    (winl* : (x : fst X) → P (winl x)) (winr* : (y : fst Y) → P (winr y))
+    (wglue* : winl* (snd X) == winr* (snd Y) [ P ↓ wglue ]) where
+
+    private
+      module M = PushoutElim winl* winr* (λ _ → wglue*)
+
+    f = M.f
+    glue-β = M.glue-β unit
 
   open WedgeElim public using () renaming (f to Wedge-elim)
 
-  module WedgeRec {k} {C : Type k} (f : fst X → C) (g : fst Y → C)
-    (p : f (snd X) == g (snd Y))
-    = PushoutRec {d = wedge-span X Y} f g (λ _ → p)
 
-  module WedgeRecType {k} (f : fst X → Type k) (g : fst Y → Type k)
-    (p : f (snd X) ≃ g (snd Y))
-    = PushoutRecType {d = wedge-span X Y} f g (λ _ → p)
+  module WedgeRec {k} {C : Type k} (winl* : fst X → C) (winr* : fst Y → C)
+    (wglue* : winl* (snd X) == winr* (snd Y)) where
+
+    private
+      module M = PushoutRec {d = wedge-span X Y} winl* winr* (λ _ → wglue*)
+
+    f = M.f
+    glue-β = M.glue-β unit
+
+
+add-wglue : ∀ {i j} {X : Ptd i} {Y : Ptd j}
+  → fst (X ⊙⊔ Y) → X ∨ Y
+add-wglue (inl x) = winl x
+add-wglue (inr y) = winr y
+
+⊙add-wglue : ∀ {i j} {X : Ptd i} {Y : Ptd j}
+  → fst (X ⊙⊔ Y ⊙→ X ⊙∨ Y)
+⊙add-wglue = (add-wglue , idp)
+
+
+module Fold {i} {X : Ptd i} =
+  WedgeRec {X = X} {Y = X} (λ x → x) (λ x → x) idp
+
+fold = Fold.f
+
+⊙fold : ∀ {i} {X : Ptd i} → fst (X ⊙∨ X ⊙→ X)
+⊙fold = (fold , idp)

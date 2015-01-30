@@ -3,6 +3,7 @@
 open import lib.Basics
 open import lib.types.Nat
 open import lib.types.Group
+open import lib.types.TLevel
 
 module lib.types.Int where
 
@@ -41,6 +42,24 @@ abstract
 succ-equiv : ℤ ≃ ℤ
 succ-equiv = equiv succ pred succ-pred pred-succ
 
+pred-injective : (z₁ z₂ : ℤ) → pred z₁ == pred z₂ → z₁ == z₂
+pred-injective z₁ z₂ p = ! (succ-pred z₁) ∙ ap succ p ∙ succ-pred z₂
+
+succ-injective : (z₁ z₂ : ℤ) → succ z₁ == succ z₂ → z₁ == z₂
+succ-injective z₁ z₂ p = ! (pred-succ z₁) ∙ ap pred p ∙ pred-succ z₂
+
+{- Converting between ℤ, ℕ, and ℕ₋₂ -}
+
+ℤ-to-ℕ₋₂ : ℤ → ℕ₋₂
+ℤ-to-ℕ₋₂ O = ⟨0⟩
+ℤ-to-ℕ₋₂ (pos m) = S ⟨ m ⟩
+ℤ-to-ℕ₋₂ (neg O) = ⟨-1⟩
+ℤ-to-ℕ₋₂ (neg _) = ⟨-2⟩
+
+ℕ-to-ℤ : ℕ → ℤ
+ℕ-to-ℤ n = pred (pos n)
+
+
 {- Proof that [ℤ] has decidable equality and hence is a set -}
 
 private
@@ -49,16 +68,10 @@ private
   ℤ-get-pos (pos n) = n
   ℤ-get-pos (neg n) = 0
 
-  pos-injective : (n m : ℕ) (p : pos n == pos m) → n == m
-  pos-injective n m p = ap ℤ-get-pos p
-
   ℤ-get-neg : ℤ → ℕ
   ℤ-get-neg O = 0
   ℤ-get-neg (pos n) = 0
   ℤ-get-neg (neg n) = n
-
-  neg-injective : (n m : ℕ) (p : neg n == neg m) → n == m
-  neg-injective n m p = ap ℤ-get-neg p
 
   ℤ-neg≠O≠pos-type : ℤ → Type₀
   ℤ-neg≠O≠pos-type O = Unit
@@ -71,6 +84,12 @@ private
   ℤ-neg≠pos-type (neg n) = Unit
 
 abstract
+  pos-injective : (n m : ℕ) (p : pos n == pos m) → n == m
+  pos-injective n m p = ap ℤ-get-pos p
+
+  neg-injective : (n m : ℕ) (p : neg n == neg m) → n == m
+  neg-injective n m p = ap ℤ-get-neg p
+
   ℤ-O≠pos : (n : ℕ) → O ≠ pos n
   ℤ-O≠pos n p = transport ℤ-neg≠O≠pos-type p unit
 
@@ -212,7 +231,7 @@ private
 ℤ~-inv-l (pos n) = ℤ~-inv-r-neg n
 ℤ~-inv-l (neg n) = ℤ~-inv-r-pos n
 
-ℤ-group-structure : GroupStructure ℤ 
+ℤ-group-structure : GroupStructure ℤ
 ℤ-group-structure = record
   { ident = O
   ; inv = ℤ~

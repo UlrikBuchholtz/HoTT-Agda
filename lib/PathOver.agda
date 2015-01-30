@@ -1,10 +1,9 @@
 {-# OPTIONS --without-K #-}
 
 open import lib.Base
+open import lib.PathFunctor
 open import lib.PathGroupoid
 open import lib.Equivalences
-open import lib.Univalence
-open import lib.Funext
 
 {- Structural lemmas about paths over paths
 
@@ -103,6 +102,17 @@ module _ {i j k} {A : Type i} {B : A → Type j} {C : Type k} where
     → u == v [ B ↓ p ]
   ↓-cst2×-out idp idp r = r
 
+-- Dependent paths in the universal fibration over the universe
+↓-idf-out : ∀ {i} {A B : Type i} (p : A == B) {u : A} {v : B}
+  → u == v [ (λ x → x) ↓ p ]
+  → coe p u == v
+↓-idf-out idp = idf _
+
+↓-idf-in : ∀ {i} {A B : Type i} (p : A == B) {u : A} {v : B}
+  → coe p u == v
+  → u == v [ (λ x → x) ↓ p ]
+↓-idf-in idp = idf _
+
 -- Dependent paths over [ap f p]
 module _ {i j k} {A : Type i} {B : Type j} (C : B → Type k) (f : A → B) where
 
@@ -115,6 +125,22 @@ module _ {i j k} {A : Type i} {B : Type j} (C : B → Type k) (f : A → B) wher
     → u == v [ C ↓ ap f p ]
     → u == v [ C ∘ f ↓ p ]
   ↓-ap-out idp idp = idp
+
+-- Dependent paths over [ap2 f p q]
+module _ {i j k l} {A : Type i} {B : Type j} {C : Type k} (D : C → Type l)
+  (f : A → B → C) where
+
+  ↓-ap2-in : {x y : A} {p : x == y} {w z : B} {q : w == z}
+    {u : D (f x w)} {v : D (f y z)}
+    → u == v [ D ∘ uncurry f ↓ pair×= p q ]
+    → u == v [ D ↓ ap2 f p q ]
+  ↓-ap2-in {p = idp} {q = idp} α = α
+
+  ↓-ap2-out : {x y : A} {p : x == y} {w z : B} {q : w == z}
+    {u : D (f x w)} {v : D (f y z)}
+    → u == v [ D ↓ ap2 f p q ]
+    → u == v [ D ∘ uncurry f ↓ pair×= p q ]
+  ↓-ap2-out {p = idp} {q = idp} α = α
 
 apd↓ : ∀ {i j k} {A : Type i} {B : A → Type j} {C : (a : A) → B a → Type k}
   (f : {a : A} (b : B a) → C a b) {x y : A} {p : x == y}
@@ -222,6 +248,14 @@ apd=cst-in {p = idp} x = x
   → u == v [ uncurry C ↓ pair= p q ]
   → u == v [ (λ z → C z (f z)) ↓ p ]
 ↓-apd-out C {p = idp} idp idp = idp
+
+↓-ap-out= : ∀ {i j k} {A : Type i} {B : Type j} (C : (b : B) → Type k)
+  (f : A → B) {x y : A} (p : x == y)
+  {q : f x == f y} (r : ap f p == q)
+  {u : C (f x)} {v : C (f y)}
+  → u == v [ C ↓ q ]
+  → u == v [ (λ z → C (f z)) ↓ p ]
+↓-ap-out= C f idp idp idp = idp
 
 -- No idea what that is
 to-transp-weird : ∀ {i j} {A : Type i} {B : A → Type j}
