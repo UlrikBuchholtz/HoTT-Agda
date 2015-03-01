@@ -118,30 +118,6 @@ assoc (x , dir d) (y , dir e) (z , one) | (w , dir g) = pair×= lemma idp
             (x · y) · (z · w)     =⟨ ! (·assoc (x · y) z w) ⟩
             ((x · y) · z) · w     =⟨ ·cohl (·assoc x y z) w ⟩
             (x · (y · z)) · w ∎
-assoc (x , dir i) (y , dir i) (z , dir i) = {!!}
-assoc (x , dir i) (y , dir i) (z , dir j) = {!!}
-assoc (x , dir i) (y , dir i) (z , dir k) = {!!}
-assoc (x , dir i) (y , dir j) (z , dir i) = {!!}
-assoc (x , dir i) (y , dir j) (z , dir j) = {!!}
-assoc (x , dir i) (y , dir j) (z , dir k) = {!!}
-assoc (x , dir i) (y , dir k) (z , dir i) = {!!}
-assoc (x , dir i) (y , dir k) (z , dir j) = {!!}
-assoc (x , dir i) (y , dir k) (z , dir k) = {!!}
-assoc (x , dir j) (y , dir i) (z , dir i) = {!!}
-assoc (x , dir j) (y , dir i) (z , dir j) = {!!}
-assoc (x , dir j) (y , dir i) (z , dir k) = {!!}
-assoc (x , dir j) (y , dir j) (z , dir i) = {!!}
-assoc (x , dir j) (y , dir j) (z , dir j) = {!!}
-assoc (x , dir j) (y , dir j) (z , dir k) = {!!}
-assoc (x , dir j) (y , dir k) (z , dir i) = {!!}
-assoc (x , dir j) (y , dir k) (z , dir j) = {!!}
-assoc (x , dir j) (y , dir k) (z , dir k) = {!!}
-assoc (x , dir k) (y , dir i) (z , dir i) = {!!}
-assoc (x , dir k) (y , dir i) (z , dir j) = {!!}
-assoc (x , dir k) (y , dir i) (z , dir k) = {!!}
-assoc (x , dir k) (y , dir j) (z , dir i) = {!!}
-assoc (x , dir k) (y , dir j) (z , dir j) = {!!}
-assoc (x , dir k) (y , dir j) (z , dir k) = {!!}
-assoc (x , dir k) (y , dir k) (z , dir i) = {!!}
-assoc (x , dir k) (y , dir k) (z , dir j) = {!!}
-assoc (x , dir k) (y , dir k) (z , dir k) = {!!}
+assoc (x , dir d) (y , dir e) (z , dir f) with multWithSign d e | multWithSign e f
+assoc (x , dir d) (y , dir e) (z , dir f) | a , one | b , v = {!!}
+assoc (x₁ , dir d) (y , dir e) (z , dir f) | a , dir x | b , v = {!!}
