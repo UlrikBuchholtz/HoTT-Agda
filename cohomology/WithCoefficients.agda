@@ -1,7 +1,6 @@
 {-# OPTIONS --without-K #-}
 
 open import HoTT
-open import homotopy.KGn
 
 module cohomology.WithCoefficients where
 
@@ -10,54 +9,20 @@ module cohomology.WithCoefficients where
 →Ω-group-structure X Y = record {
   ident = ((λ _ → idp) , idp);
   inv = λ F → ((! ∘ fst F) , ap ! (snd F));
-  comp = λ F G →
-    ((λ x → fst F x ∙ fst G x), ap2 _∙_ (snd F) (snd G));
+  comp = ⊙comp2 ⊙conc;
   unitl = λ G → pair= idp (ap2-idp-l _∙_ {x = idp} (snd G) ∙ ap-idf (snd G));
-  unitr = λ F → pair=
-    (λ= (∙-unit-r ∘ fst F))
-    (↓-app=cst-in $
-      ap2 _∙_ (snd F) idp
-        =⟨ ap2-idp-r _∙_ (snd F) ⟩
-      ap (λ p → p ∙ idp) (snd F)
-        =⟨ unitr-lemma (snd F) ⟩
-      ∙-unit-r (fst F (snd X)) ∙ snd F
-        =⟨ ap (λ w → w ∙ snd F) (! (app=-β (∙-unit-r ∘ fst F) (snd X))) ⟩
-      app= (λ= (∙-unit-r ∘ fst F)) (snd X) ∙ snd F
-      ∎);
-  assoc = λ F G H → pair=
-    (λ= (λ x → ∙-assoc (fst F x) (fst G x) (fst H x)))
-    (↓-app=cst-in $
-      ap2 _∙_ (ap2 _∙_ (snd F) (snd G)) (snd H)
-        =⟨ ! (∙-unit-r _) ∙ assoc-lemma (snd F) (snd G) (snd H) ⟩
-      ∙-assoc (fst F (snd X)) (fst G (snd X)) (fst H (snd X))
-       ∙ ap2 _∙_ (snd F) (ap2 _∙_ (snd G) (snd H))
-        =⟨ ! (app=-β (λ x → ∙-assoc (fst F x) (fst G x) (fst H x)) (snd X))
-           |in-ctx (λ w → w ∙ ap2 _∙_ (snd F) (ap2 _∙_ (snd G) (snd H))) ⟩
-      app= (λ= (λ x → ∙-assoc (fst F x) (fst G x) (fst H x))) (snd X)
-       ∙ ap2 _∙_ (snd F) (ap2 _∙_ (snd G) (snd H))
-      ∎);
-  invl = λ F → pair=
-    (λ= (!-inv-l ∘ fst F))
-    (↓-app=cst-in $
-      ap2 _∙_ (ap ! (snd F)) (snd F)
-        =⟨ invl-lemma (snd F) ⟩
-      !-inv-l (fst F (snd X))
-        =⟨ ! (app=-β (!-inv-l ∘ fst F) (snd X)) ⟩
-      app= (λ= (!-inv-l ∘ fst F)) (snd X)
-        =⟨ ! (∙-unit-r _) ⟩
-      app= (λ= (!-inv-l ∘ fst F)) (snd X) ∙ idp
-      ∎);
-  invr = λ F → pair=
-    (λ= (!-inv-r ∘ fst F))
-    (↓-app=cst-in $
-      ap2 _∙_ (snd F) (ap ! (snd F))
-        =⟨ invr-lemma (snd F) ⟩
-      !-inv-r (fst F (snd X))
-        =⟨ ! (app=-β (!-inv-r ∘ fst F) (snd X)) ⟩
-      app= (λ= (!-inv-r ∘ fst F)) (snd X)
-        =⟨ ! (∙-unit-r _) ⟩
-      app= (λ= (!-inv-r ∘ fst F)) (snd X) ∙ idp
-      ∎)}
+  unitr = λ F → ⊙λ=
+    (∙-unit-r ∘ fst F)
+    (ap2-idp-r _∙_ (snd F) ∙ unitr-lemma (snd F));
+  assoc = λ F G H → ⊙λ=
+    (λ x → ∙-assoc (fst F x) (fst G x) (fst H x))
+    (! (∙-unit-r _) ∙ assoc-lemma (snd F) (snd G) (snd H));
+  invl = λ F → ⊙λ=
+    (!-inv-l ∘ fst F)
+    (invl-lemma (snd F) ∙ ! (∙-unit-r _));
+  invr = λ F → ⊙λ=
+    (!-inv-r ∘ fst F)
+    (invr-lemma (snd F) ∙ ! (∙-unit-r _))}
   where
 
   unitr-lemma : ∀ {i} {A : Type i} {x : A} {p : x == x} (α : p == idp)
@@ -82,8 +47,29 @@ module cohomology.WithCoefficients where
 →Ω-Group : ∀ {i j} (X : Ptd i) (Y : Ptd j) → Group (lmax i j)
 →Ω-Group X Y = Trunc-Group (→Ω-group-structure X Y)
 
+{- →Ω-Group is functorial in the first argument -}
 
-{- Some lemmas to be used to calculate cohomology of S⁰ -}
+→Ω-Group-dom-act : ∀ {i j k} {X : Ptd i} {Y : Ptd j}
+  (f : fst (X ⊙→ Y)) (Z : Ptd k)
+  → (→Ω-Group Y Z →ᴳ →Ω-Group X Z)
+→Ω-Group-dom-act {Y = Y} f Z =
+  Trunc-Group-hom (λ g → g ⊙∘ f) (⊙comp2-pre∘ f ⊙conc)
+
+→Ω-Group-dom-idf : ∀ {i j} {X : Ptd i} (Y : Ptd j)
+  → →Ω-Group-dom-act (⊙idf X) Y == idhom (→Ω-Group X Y)
+→Ω-Group-dom-idf Y = hom= _ _ $ λ= $ Trunc-elim
+  (λ _ → =-preserves-level _ Trunc-level) (λ _ → idp)
+
+→Ω-Group-dom-∘ : ∀ {i j k l} {X : Ptd i} {Y : Ptd j} {Z : Ptd k}
+  (g : fst (Y ⊙→ Z)) (f : fst (X ⊙→ Y)) (W : Ptd l)
+  → →Ω-Group-dom-act (g ⊙∘ f) W
+    == →Ω-Group-dom-act f W ∘ᴳ →Ω-Group-dom-act g W
+→Ω-Group-dom-∘ g f W = hom= _ _ $ λ= $
+  Trunc-elim (λ _ → =-preserves-level _ Trunc-level)
+    (λ h → ap [_] (! (⊙∘-assoc h g f)))
+
+{- Pointed maps out of bool -}
+
 Bool⊙→-out : ∀ {i} {X : Ptd i}
   → fst (⊙Lift {j = i} ⊙Bool ⊙→ X) → fst X
 Bool⊙→-out (h , _) = h (lift false)
@@ -116,45 +102,8 @@ abstract
     → fst (⊙Lift {j = i} ⊙Bool ⊙→ X) == fst X
   Bool⊙→-path X = ua (Bool⊙→-equiv X)
 
-private
-  Bool⊙→Ω-iso-π₁' : ∀ {i} (X : Ptd i)
-    → →Ω-Group (⊙Lift {j = i} ⊙Bool) X == π 1 (ℕ-S≠O _) X
-  Bool⊙→Ω-iso-π₁' {i} X =
-    transport
-      (λ pi → →Ω-Group (⊙Lift ⊙Bool) X == pi 1 (ℕ-S≠O _) X)
-      π-fold
-      (group-iso
-        (record {
-          f = Trunc-fmap Bool⊙→-out;
-          pres-comp = λ tg₁ tg₂ →
-            Trunc-elim
-              {P = λ tg₁ → Trunc-fmap Bool⊙→-out (tg₁ ◯ tg₂)
-                   == (Trunc-fmap Bool⊙→-out tg₁) □ (Trunc-fmap Bool⊙→-out tg₂)}
-              (λ _ → =-preserves-level _ Trunc-level)
-              (λ g₁ →
-                Trunc-elim
-                  {P = λ tg₂ → Trunc-fmap Bool⊙→-out ([ g₁ ] ◯ tg₂)
-                       == [ Bool⊙→-out g₁ ] □ (Trunc-fmap Bool⊙→-out tg₂)}
-                  (λ _ → =-preserves-level _ Trunc-level)
-                  (λ g₂ → idp)
-                  tg₂)
-              tg₁})
-        (is-equiv-Trunc ⟨0⟩ _ (snd (Bool⊙→-equiv (⊙Ω X)))))
-    where
-    _◯_ = Trunc-fmap2 {n = ⟨0⟩} $ GroupStructure.comp $
-            →Ω-group-structure (⊙Lift ⊙Bool) X
-    _□_ = Trunc-fmap2 {n = ⟨0⟩} $ GroupStructure.comp $
-            Ω^-group-structure 1 (ℕ-S≠O _) X
-
-{- Agda seems to handle "abstract" more easily when it's separated from
- - the details of the term -}
 abstract
-  Bool⊙→Ω-iso-π₁ : ∀ {i} (X : Ptd i)
+  Bool⊙→Ω-is-π₁ : ∀ {i} (X : Ptd i)
     → →Ω-Group (⊙Lift {j = i} ⊙Bool) X == π 1 (ℕ-S≠O _) X
-  Bool⊙→Ω-iso-π₁ = Bool⊙→Ω-iso-π₁'
-
-Bool⊙→KG0-iso-G : ∀ {i} (G : Group i) (abel : is-abelian G)
-  → →Ω-Group (⊙Lift {j = i} ⊙Bool) (KGnExplicit.⊙KG G abel 1) == G
-Bool⊙→KG0-iso-G G abel =
-  Bool⊙→Ω-iso-π₁ (KGnExplicit.⊙KG G abel 1)
-  ∙ KGnExplicit.π-diag G abel 1 (ℕ-S≠O _)
+  Bool⊙→Ω-is-π₁ {i} X = group-ua $
+    Trunc-Group-iso Bool⊙→-out (λ _ _ → idp) (snd (Bool⊙→-equiv (⊙Ω X)))

@@ -20,24 +20,6 @@ _⊙→_ : ∀ {i j} → Ptd i → Ptd j → Ptd (lmax i j)
 
 infixr 0 _⊙→_
 
-_⊙×_ : ∀ {i j} → Ptd i → Ptd j → Ptd (lmax i j)
-(A , a₀) ⊙× (B , b₀) = (A × B , (a₀ , b₀))
-
-⊙fst : ∀ {i j} {X : Ptd i} {Y : Ptd j} → fst (X ⊙× Y ⊙→ X)
-⊙fst = (fst , idp)
-
-⊙snd : ∀ {i j} {X : Ptd i} {Y : Ptd j} → fst (X ⊙× Y ⊙→ Y)
-⊙snd = (snd , idp)
-
-⊙diag : ∀ {i} {X : Ptd i} → fst (X ⊙→ X ⊙× X)
-⊙diag = ((λ x → (x , x)) , idp)
-
-pair⊙→ : ∀ {i j k l} {X : Ptd i} {Y : Ptd j} {Z : Ptd k} {W : Ptd l}
-  → fst (X ⊙→ Y) → fst (Z ⊙→ W)
-  → fst ((X ⊙× Z) ⊙→ (Y ⊙× W))
-pair⊙→ (f , fpt) (g , gpt) =
-  ((λ {(x , z) → (f x , g z)}) , pair×= fpt gpt)
-
 infixr 4 _⊙∘_
 
 ⊙idf : ∀ {i} (X : Ptd i) → fst (X ⊙→ X)
@@ -54,6 +36,10 @@ _⊙∘_ : ∀ {i j k} {X : Ptd i} {Y : Ptd j} {Z : Ptd k}
   → ⊙idf Y ⊙∘ f == f
 ⊙∘-unit-l (f , idp) = idp
 
+⊙∘-unit-r : ∀ {i j} {X : Ptd i} {Y : Ptd j} (f : fst (X ⊙→ Y))
+  → f ⊙∘ ⊙idf X == f
+⊙∘-unit-r f = idp
+
 ⊙∘-assoc : ∀ {i j k l} {X : Ptd i} {Y : Ptd j} {Z : Ptd k} {W : Ptd l}
   (h : fst (Z ⊙→ W)) (g : fst (Y ⊙→ Z)) (f : fst (X ⊙→ Y))
   → ((h ⊙∘ g) ⊙∘ f) == (h ⊙∘ (g ⊙∘ f))
@@ -62,6 +48,49 @@ _⊙∘_ : ∀ {i j k} {X : Ptd i} {Y : Ptd j} {Z : Ptd k}
   lemma : ∀ {x₁ x₂} (fpt : x₁ == x₂) → ∀ gpt → ∀ hpt →
           ap (h ∘ g) fpt ∙ ap h gpt ∙ hpt == ap h (ap g fpt ∙ gpt) ∙ hpt
   lemma idp gpt hpt = idp
+
+_⊙×_ : ∀ {i j} → Ptd i → Ptd j → Ptd (lmax i j)
+(A , a₀) ⊙× (B , b₀) = (A × B , (a₀ , b₀))
+
+⊙comp2 : ∀ {i j k l} {X : Ptd i} {Y : Ptd j} {Z : Ptd k} {W : Ptd l}
+  → fst (Y ⊙× Z ⊙→ W) → fst (X ⊙→ Y) → fst (X ⊙→ Z) → fst (X ⊙→ W)
+⊙comp2 (o , opt) (f , fpt) (g , gpt) =
+  (λ x → o (f x , g x)) , ap2 (curry o) fpt gpt ∙' opt
+
+⊙comp2-pre∘ : ∀ {i j k l m} {X₁ : Ptd i} {X₂ : Ptd j} (f : fst (X₁ ⊙→ X₂))
+  {Y : Ptd k} {Z : Ptd l} {W : Ptd m}
+  (o : fst (Y ⊙× Z ⊙→ W)) (g : fst (X₂ ⊙→ Y)) (h : fst (X₂ ⊙→ Z))
+  → ⊙comp2 o g h ⊙∘ f == ⊙comp2 o (g ⊙∘ f) (h ⊙∘ f)
+⊙comp2-pre∘ (f , idp) (o , idp) (g , idp) (h , idp) = idp
+
+⊙fst : ∀ {i j} {X : Ptd i} {Y : Ptd j} → fst (X ⊙× Y ⊙→ X)
+⊙fst = (fst , idp)
+
+⊙snd : ∀ {i j} {X : Ptd i} {Y : Ptd j} → fst (X ⊙× Y ⊙→ Y)
+⊙snd = (snd , idp)
+
+⊙diag : ∀ {i} {X : Ptd i} → fst (X ⊙→ X ⊙× X)
+⊙diag = ((λ x → (x , x)) , idp)
+
+⊙×-in : ∀ {i j k} {X : Ptd i} {Y : Ptd j} {Z : Ptd k}
+  → fst (X ⊙→ Y) → fst (X ⊙→ Z) → fst (X ⊙→ Y ⊙× Z)
+⊙×-in = ⊙comp2 (uncurry _,_ , idp)
+
+⊙fst-⊙×-in : ∀ {i j k} {X : Ptd i} {Y : Ptd j} {Z : Ptd k}
+  (f : fst (X ⊙→ Y)) (g : fst (X ⊙→ Z))
+  → ⊙fst ⊙∘ ⊙×-in f g == f
+⊙fst-⊙×-in (f , idp) (g , idp) = idp
+
+⊙snd-⊙×-in : ∀ {i j k} {X : Ptd i} {Y : Ptd j} {Z : Ptd k}
+  (f : fst (X ⊙→ Y)) (g : fst (X ⊙→ Z))
+  → ⊙snd ⊙∘ ⊙×-in f g == g
+⊙snd-⊙×-in (f , idp) (g , idp) = idp
+
+pair⊙→ : ∀ {i j k l} {X : Ptd i} {Y : Ptd j} {Z : Ptd k} {W : Ptd l}
+  → fst (X ⊙→ Y) → fst (Z ⊙→ W)
+  → fst ((X ⊙× Z) ⊙→ (Y ⊙× W))
+pair⊙→ (f , fpt) (g , gpt) =
+  ((λ {(x , z) → (f x , g z)}) , pair×= fpt gpt)
 
 {- Obtaining equality of pointed types from an equivalence -}
 ⊙ua : ∀ {i} {A B : Type i} {a₀ : A} {b₀ : B}
@@ -89,3 +118,36 @@ module _ {i j} {X : Ptd i} {Y : Ptd j} (e : fst X ≃ fst Y)
 
   ⊙<– : fst (Y ⊙→ X)
   ⊙<– = (<– e , ap (<– e) (! p) ∙ <–-inv-l e (snd X))
+
+  ⊙<–-inv-l : ⊙<– ⊙∘ ⊙–> == ⊙idf _
+  ⊙<–-inv-l = ⊙λ= (<–-inv-l e) $
+    ap (<– e) p ∙ ap (<– e) (! p) ∙ <–-inv-l e (snd X)
+      =⟨ ! (∙-assoc (ap (<– e) p) (ap (<– e) (! p)) (<–-inv-l e (snd X))) ⟩
+    (ap (<– e) p ∙ ap (<– e) (! p)) ∙ <–-inv-l e (snd X)
+      =⟨ ∙-ap (<– e) p (! p) ∙ ap (ap (<– e)) (!-inv-r p)
+         |in-ctx (λ w → w ∙ <–-inv-l e (snd X)) ⟩
+    <–-inv-l e (snd X)
+      =⟨ ! (∙-unit-r _) ⟩
+    <–-inv-l e (snd X) ∙ idp ∎
+
+  ⊙<–-inv-r : ⊙–> ⊙∘ ⊙<– == ⊙idf _
+  ⊙<–-inv-r = ⊙λ= (<–-inv-r e) $
+    ap (–> e) (ap (<– e) (! p) ∙ <–-inv-l e (snd X)) ∙ p
+      =⟨ ap-∙ (–> e) (ap (<– e) (! p)) (<–-inv-l e (snd X))
+         |in-ctx (λ w → w ∙ p) ⟩
+    (ap (–> e) (ap (<– e) (! p)) ∙ ap (–> e) (<–-inv-l e (snd X))) ∙ p
+      =⟨ <–-inv-adj e (snd X)
+         |in-ctx (λ w → (ap (–> e) (ap (<– e) (! p)) ∙ w) ∙ p) ⟩
+    (ap (–> e) (ap (<– e) (! p)) ∙ <–-inv-r e (–> e (snd X))) ∙ p
+      =⟨ ∘-ap (–> e) (<– e) (! p)
+         |in-ctx (λ w → (w ∙ <–-inv-r e (–> e (snd X))) ∙ p) ⟩
+    (ap (–> e ∘ <– e) (! p) ∙ <–-inv-r e (–> e (snd X))) ∙ p
+      =⟨ htpy-lemma (<–-inv-r e) p ⟩
+    <–-inv-r e (snd Y)
+      =⟨ ! (∙-unit-r _) ⟩
+    <–-inv-r e (snd Y) ∙ idp ∎
+    where
+    htpy-lemma : ∀ {i} {A : Type i} {f : A → A}
+      (p : ∀ z → f z == z) {x y : A} (q : x == y)
+      → (ap f (! q) ∙ p x) ∙ q == p y
+    htpy-lemma p idp = ∙-unit-r _

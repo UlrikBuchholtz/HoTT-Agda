@@ -250,10 +250,9 @@ module MayerVietorisBase
 
   {- Transporting [cfcod reglue] over the equivalence -}
 
-  cfcod-over : ⊙cfcod ⊙reglue == ⊙ext-glue
-              [ (λ W → fst (⊙Pushout ps ⊙→ W)) ↓ ⊙path ]
-  cfcod-over =
-    codomain-over-⊙equiv (⊙cfcod ⊙reglue) eq idp ▹ lemma
+  cfcod-over : cfcod reglue == ext-glue
+              [ (λ W → fst (⊙Pushout ps) → fst W) ↓ ⊙path ]
+  cfcod-over = ↓-cst2-in _ _ $ codomain-over-equiv _ _
     where
     lemma : (into , idp) ⊙∘ ⊙cfcod ⊙reglue == ⊙ext-glue
     lemma = pair= idp $
@@ -319,9 +318,9 @@ module MayerVietorisBase
         → Cube sq₋₋₀ (vid-square ⊡v' sq₋₋₁) sq₀₋₋ sq₋₀₋ sq₋₁₋ sq₁₋₋
       right-from-top-lemma' ids cu = cu
 
-  ext-over : ⊙ext-glue == ⊙mv-diff
-             [ (λ W → fst (W ⊙→ ⊙Susp (X ⊙∨ Y))) ↓ ⊙path ]
-  ext-over = ⊙λ= fn-lemma idp ◃ domain-over-⊙equiv ⊙mv-diff _ _
+  ext-over : ext-glue == mv-diff
+             [ (λ W → fst W → fst (⊙Susp (X ⊙∨ Y))) ↓ ⊙path ]
+  ext-over = ↓-cst2-in _ _ $ λ= fn-lemma ◃ domain-over-equiv _ _
     where
     fn-lemma : ∀ κ → ext-glue κ == mv-diff (into κ)
     fn-lemma = Cofiber-elim reglue
@@ -344,10 +343,10 @@ module MayerVietorisBase
                  ∙ MVDiff.glue-β z))
 
       fn-fill : Σ (Square idp idp (ap mv-diff (merid _ (snd Z))) idp)
-        (λ sq → Cube (ur-square (merid _ (winl (snd X)))) sq
+        (λ sq → Cube (tr-square (merid _ (winl (snd X)))) sq
                      (natural-square (λ _ → idp) wglue)
                      (natural-square (merid _) wglue
-                       ⊡h' square-symmetry (ur-square (merid _ (winr (snd Y)))))
+                       ⊡h' square-symmetry (tr-square (merid _ (winr (snd Y)))))
                      (natural-square (ap mv-diff ∘ into-glue) wglue)
                      (square-push-rt (! (merid _ (winr (snd Y))))
                        (natural-square (fn-cod ∘ reglue) wglue)))
@@ -356,11 +355,11 @@ module MayerVietorisBase
       fn-coh : (w : X ∨ Y)
         → Square idp (merid _ w) (ap mv-diff (into-glue w)) (fn-cod (reglue w))
       fn-coh = Wedge-elim
-        (λ x → ur-square (merid _ (winl x)))
-          (λ y → ur-square (merid _ (winr y)) ⊡v' (fst fn-fill))
+        (λ x → tr-square (merid _ (winl x)))
+          (λ y → tr-square (merid _ (winr y)) ⊡v' (fst fn-fill))
         (cube-to-↓-square $ right-from-top-lemma
           (fst fn-fill)
-          (ur-square (merid _ (winr (snd Y))))
+          (tr-square (merid _ (winr (snd Y))))
           (snd fn-fill))
 
 {- Main results -}
@@ -374,10 +373,10 @@ module MayerVietoris (ps : ⊙Span {i} {i} {i}) where
         eq : Cofiber reglue ≃ Suspension (fst Z)
         path : Cofiber reglue == Suspension (fst Z)
         ⊙path : ⊙Cof ⊙reglue == ⊙Susp Z
-        cfcod-over : ⊙cfcod ⊙reglue == ⊙ext-glue
-                     [ (λ W → fst (⊙Pushout ps ⊙→ W)) ↓ ⊙path ]
-        ext-over : ⊙ext-glue == ⊙mv-diff
-                   [ (λ W → fst (W ⊙→ ⊙Susp (X ⊙∨ Y))) ↓ ⊙path ]
+        cfcod-over : cfcod reglue == ext-glue
+                     [ (λ W → fst (⊙Pushout ps) → fst W) ↓ ⊙path ]
+        ext-over : ext-glue == mv-diff
+                   [ (λ W → fst W → fst (⊙Susp (X ⊙∨ Y))) ↓ ⊙path ]
 
     results : Results ps
     results = ⊙pushout-J Results base-results ps

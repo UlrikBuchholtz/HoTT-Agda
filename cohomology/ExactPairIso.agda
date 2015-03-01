@@ -7,8 +7,8 @@ module cohomology.ExactPairIso where
 
 {- An exact sequence 0 → G → H → 0 implies that G == H -}
 
-module _ {i} {G H K L : Group i} {φ : GroupHom H K}
-  (ex : ExactSeq (G ⟨ cst-hom ⟩→ H ⟨ φ ⟩→ K ⟨ cst-hom ⟩→ L ⊣|)) where
+module _ {i} {G H K L : Group i} {φ : H →ᴳ K}
+  (ex : is-exact-seq (G ⟨ cst-hom ⟩→ H ⟨ φ ⟩→ K ⟨ cst-hom ⟩→ L ⊣|)) where
 
   private
     inj : (h₁ h₂ : Group.El H) → GroupHom.f φ h₁ == GroupHom.f φ h₂ → h₁ == h₂
@@ -17,25 +17,25 @@ module _ {i} {G H K L : Group i} {φ : GroupHom H K}
                  (ktoi (exact-get ex 0) h p))
 
   exact-pair-iso : H == K
-  exact-pair-iso = surj-inj-iso φ inj (λ k → ktoi (exact-get ex 1) k idp)
+  exact-pair-iso = surj-inj-= φ inj (λ k → ktoi (exact-get ex 1) k idp)
 
-module _ {i} {G H K J : Group i} {φ : GroupHom G H} {ψ : GroupHom H K}
-  {χ : GroupHom K J} (p : G == 0G) (q : J == 0G)
-  (ex : ExactSeq (G ⟨ φ ⟩→ H ⟨ ψ ⟩→ K ⟨ χ ⟩→ J ⊣|)) where
+module _ {i} {G H K J : Group i} {φ : G →ᴳ H} {ψ : H →ᴳ K}
+  {χ : K →ᴳ J} (p : G == 0ᴳ) (q : J == 0ᴳ)
+  (ex : is-exact-seq (G ⟨ φ ⟩→ H ⟨ ψ ⟩→ K ⟨ χ ⟩→ J ⊣|)) where
 
   private
-    ex₁ : ExactSeq (0G ⟨ cst-hom ⟩→ H ⟨ ψ ⟩→ K ⟨ χ ⟩→ J ⊣|)
+    ex₁ : is-exact-seq (0ᴳ ⟨ cst-hom ⟩→ H ⟨ ψ ⟩→ K ⟨ χ ⟩→ J ⊣|)
     ex₁ = transport
-      (λ {(G' , φ') → ExactSeq (G' ⟨ φ' ⟩→ H ⟨ ψ ⟩→ K ⟨ χ ⟩→ J ⊣|)})
-      (pair= p (prop-has-all-paths-↓ {B = λ L → GroupHom L H}
-                 (raise-level ⟨-2⟩ 0G-hom-out-level)))
+      (λ {(G' , φ') → is-exact-seq (G' ⟨ φ' ⟩→ H ⟨ ψ ⟩→ K ⟨ χ ⟩→ J ⊣|)})
+      (pair= p (prop-has-all-paths-↓ {B = λ L → L →ᴳ H}
+                 (raise-level ⟨-2⟩ 0ᴳ-hom-out-level)))
       ex
 
-    ex₂ : ExactSeq (0G ⟨ cst-hom ⟩→ H ⟨ ψ ⟩→ K ⟨ cst-hom ⟩→ 0G ⊣|)
+    ex₂ : is-exact-seq (0ᴳ ⟨ cst-hom ⟩→ H ⟨ ψ ⟩→ K ⟨ cst-hom ⟩→ 0ᴳ ⊣|)
     ex₂ = transport
-      (λ {(J' , χ') → ExactSeq (0G ⟨ cst-hom ⟩→ H ⟨ ψ ⟩→ K ⟨ χ' ⟩→ J' ⊣|)})
-      (pair= q (prop-has-all-paths-↓ {B = λ L → GroupHom K L}
-                 (raise-level _ 0G-hom-in-level)))
+      (λ {(J' , χ') → is-exact-seq (0ᴳ ⟨ cst-hom ⟩→ H ⟨ ψ ⟩→ K ⟨ χ' ⟩→ J' ⊣|)})
+      (pair= q (prop-has-all-paths-↓ {B = λ L → K →ᴳ L}
+                 (raise-level _ 0ᴳ-hom-in-level)))
       ex₁
 
   exact-pair-path-iso : H == K

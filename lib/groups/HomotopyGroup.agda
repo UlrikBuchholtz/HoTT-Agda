@@ -21,45 +21,25 @@ module lib.groups.HomotopyGroup where
 {- Higher homotopy groups -}
 module _ {i} where
 
-  π-concrete : (n : ℕ) (t : n ≠ O) (X : Ptd i) → Group i
-  π-concrete n t X = Trunc-Group (Ω^-group-structure n t X)
-
-  {- Since the definition of π-concrete is so complicated, using it
-   - can be very slow, so we use an abstracted version and convert
-   - between the two when we need to expand π -}
-  abstract
-    π : (n : ℕ) (t : n ≠ O) (X : Ptd i) → Group i
-    π = π-concrete
-
-    π-fold : π-concrete == π
-    π-fold = idp
-
-    π-unfold : π == π-concrete
-    π-unfold = idp
+  π : (n : ℕ) (t : n ≠ O) (X : Ptd i) → Group i
+  π n t X = Trunc-Group (Ω^-group-structure n t X)
 
   fundamental-group : (X : Ptd i) → Group i
   fundamental-group X = π 1 (ℕ-S≠O _) X
-
-  {- Favonia: Sorry about this dirty workaround.
-   - I should have updated covering spaces accordingly instead. -}
-  concrete-fundamental-group : (X : Ptd i) → Group i
-  concrete-fundamental-group X = π-concrete 1 (ℕ-S≠O _) X
 
 {- π_(n+1) of a space is π_n of its loop space -}
 abstract
   π-inner-iso : ∀ {i} (n : ℕ) (tn : n ≠ 0) (tsn : S n ≠ 0) (X : Ptd i)
     → π (S n) tsn X == π n tn (⊙Ω X)
   π-inner-iso O tn tsn X = ⊥-rec (tn idp)
-  π-inner-iso (S n') tn' tn X =
-    transport (λ pi → pi (S n) tn X == pi n tn' (⊙Ω X)) π-fold $
-      group-iso
-        (record {
-          f = Trunc-fmap (Ω^-inner-out n X);
-          pres-comp =
-            Trunc-elim (λ _ → Π-level (λ _ → =-preserves-level _ Trunc-level))
-              (λ p → Trunc-elim (λ _ → =-preserves-level _ Trunc-level)
-                 (λ q → ap [_] (Ω^-inner-out-conc^ n tn' X p q)))})
-        (is-equiv-Trunc ⟨0⟩ (Ω^-inner-out n X) (Ω^-inner-is-equiv n X))
+  π-inner-iso (S n') tn' tn X = group-ua
+    (record {
+       f = Trunc-fmap (Ω^-inner-out n X);
+       pres-comp =
+         Trunc-elim (λ _ → Π-level (λ _ → =-preserves-level _ Trunc-level))
+           (λ p → Trunc-elim (λ _ → =-preserves-level _ Trunc-level)
+              (λ q → ap [_] (Ω^-inner-out-conc^ n tn' X p q)))} ,
+     is-equiv-Trunc ⟨0⟩ (Ω^-inner-out n X) (Ω^-inner-is-equiv n X))
     where
     n : ℕ
     n = S n'
@@ -103,10 +83,7 @@ module _ {i} where
 
   π-Trunc-shift-iso : (n : ℕ) (t : n ≠ O) (X : Ptd i)
     → Ω^-Group n t (⊙Trunc ⟨ n ⟩ X) Trunc-level == π n t X
-  π-Trunc-shift-iso n t X = transport
-    (λ pi → Ω^-Group n t (⊙Trunc ⟨ n ⟩ X) Trunc-level == pi n t X)
-    π-fold
-    (group-iso (group-hom (fst F) pres-comp) e)
+  π-Trunc-shift-iso n t X = group-ua (group-hom (fst F) pres-comp , e)
     where
     n-eq : ∀ (n : ℕ) → (n -2) +2+ ⟨0⟩ == ⟨ n ⟩
     n-eq O = idp
@@ -137,22 +114,22 @@ abstract
         (prop-has-all-paths-↓ has-level-is-prop)
 
   π-above-trunc : ∀ {i} (n : ℕ) (t : n ≠ O) (m : ℕ₋₂) (X : Ptd i)
-    → (m <T ⟨ n ⟩) → π n t (⊙Trunc m X) == 0G
+    → (m <T ⟨ n ⟩) → π n t (⊙Trunc m X) == 0ᴳ
   π-above-trunc n t m X lt =
     π n t (⊙Trunc m X)
       =⟨ ! (π-Trunc-shift-iso n t (⊙Trunc m X)) ⟩
     Ω^-Group n t (⊙Trunc ⟨ n ⟩ (⊙Trunc m X)) Trunc-level
-      =⟨ contr-iso-LiftUnit _ $ inhab-prop-is-contr
+      =⟨ contr-is-0ᴳ _ $ inhab-prop-is-contr
            (Group.ident (Ω^-Group n t (⊙Trunc ⟨ n ⟩ (⊙Trunc m X)) Trunc-level))
            (Ω^-level-in ⟨-1⟩ n _ $ Trunc-preserves-level ⟨ n ⟩ $
              raise-level-≤T
                (transport (λ k → m ≤T k) (+2+-comm ⟨-1⟩ (n -2)) (<T-to-≤T lt))
                (Trunc-level {n = m})) ⟩
-    0G ∎
+    0ᴳ ∎
 
   π-above-level : ∀ {i} (n : ℕ) (t : n ≠ O) (m : ℕ₋₂) (X : Ptd i)
     → (m <T ⟨ n ⟩) → has-level m (fst X)
-    → π n t X == 0G
+    → π n t X == 0ᴳ
   π-above-level n t m X lt pX =
     ap (π n t) (! (⊙ua (unTrunc-equiv _ pX) idp))
     ∙ π-above-trunc n t m X lt
@@ -160,9 +137,9 @@ abstract
 {- πₙ(X × Y) == πₙ(X) × πₙ(Y) -}
 module _ {i j} (n : ℕ) (t : n ≠ O) (X : Ptd i) (Y : Ptd  j) where
 
-  π-×-concrete : π-concrete n t (X ⊙× Y) == π-concrete n t X ×G π-concrete n t Y
-  π-×-concrete =
-    Trunc-Group-iso f pres-comp (is-eq f g f-g g-f)
+  π-× : π n t (X ⊙× Y) == π n t X ×ᴳ π n t Y
+  π-× =
+    group-ua (Trunc-Group-iso f pres-comp (is-eq f g f-g g-f))
     ∙ Trunc-Group-× _ _
     where
     f : Ω^ n (X ⊙× Y) → Ω^ n X × Ω^ n Y
@@ -186,10 +163,3 @@ module _ {i j} (n : ℕ) (t : n ≠ O) (X : Ptd i) (Y : Ptd  j) where
       → f (conc^ n t p q) == (conc^ n t (fst (f p)) (fst (f q)) ,
                               conc^ n t (snd (f p)) (snd (f q)))
     pres-comp p q = pair×= (ap^-conc^ n t ⊙fst p q) (ap^-conc^ n t ⊙snd p q)
-
-
-  π-× : π n t (X ⊙× Y) == (π n t X) ×G (π n t Y)
-  π-× =
-    ! (ap (λ pi → pi n t (X ⊙× Y)) π-fold)
-    ∙ π-×-concrete
-    ∙ ap2 _×G_ (ap (λ pi → pi n t X) π-fold) (ap (λ pi → pi n t Y) π-fold)
