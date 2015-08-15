@@ -27,6 +27,7 @@ open import lib.types.Smash public
 open import lib.types.Join public
 open import lib.types.Torus public
 open import lib.types.Truncation public
+open import lib.types.SetQuotient public
 open import lib.types.Cospan public
 open import lib.types.Pullback public
 open import lib.types.Group public
@@ -40,6 +41,7 @@ open import lib.types.FundamentalGroupoid public
 open import lib.types.Cover public
 open import lib.types.PathSeq public
 open import lib.types.List public
+open import lib.types.FreeGroup public
 open import lib.types.NatColim public
 
 -- This should probably not be exported

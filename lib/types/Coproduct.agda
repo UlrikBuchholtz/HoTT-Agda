@@ -1,6 +1,7 @@
 {-# OPTIONS --without-K #-}
 
 open import lib.Basics
+open import lib.types.Bool
 open import lib.types.Empty
 open import lib.types.Lift
 open import lib.types.Pointed
@@ -58,6 +59,7 @@ module _ {i j} {A : Type i} {B : Type j} where
   ⊔-level _ pB (inr b₁) (inr b₂) =
     equiv-preserves-level ((inr=inr-equiv b₁ b₂)⁻¹) (pB b₁ b₂)
 
+infix 80 _⊙⊔_
 _⊙⊔_ : ∀ {i j} → Ptd i → Ptd j → Ptd (lmax i j)
 X ⊙⊔ Y = ⊙[ Coprod (fst X) (fst Y) , inl (snd X) ]
 
@@ -70,3 +72,24 @@ codiag (inr a) = a
 
 ⊙codiag : ∀ {i} {X : Ptd i} → fst (X ⊙⊔ X ⊙→ X)
 ⊙codiag = (codiag , idp)
+
+-- A binary sigma is a coproduct
+ΣBool-equiv-⊔ : ∀ {i} (Pick : Lift {j = i} Bool → Type i)
+  → Σ _ Pick ≃ (Pick (lift true) ⊔ Pick (lift false))
+ΣBool-equiv-⊔ Pick = equiv into out into-out out-into
+  where
+  into : Σ _ Pick → (Pick (lift true) ⊔ Pick (lift false))
+  into (lift true , a) = inl a
+  into (lift false , b) = inr b
+
+  out : (Pick (lift true) ⊔ Pick (lift false)) → Σ _ Pick
+  out (inl a) = (lift true , a)
+  out (inr b) = (lift false , b)
+
+  into-out : ∀ c → into (out c) == c
+  into-out (inl a) = idp
+  into-out (inr b) = idp
+
+  out-into : ∀ s → out (into s) == s
+  out-into (lift true , a) = idp
+  out-into (lift false , b) = idp

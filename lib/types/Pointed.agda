@@ -18,9 +18,17 @@ Ptd₀ = Ptd lzero
 _⊙→_ : ∀ {i j} → Ptd i → Ptd j → Ptd (lmax i j)
 (A , a₀) ⊙→ (B , b₀) = ⊙[ Σ (A → B) (λ f → f a₀ == b₀) , ((λ _ → b₀), idp) ]
 
-infixr 0 _⊙→_
+_⊙≃_ : ∀ {i j} → Ptd i → Ptd j → Set (lmax i j)
+X ⊙≃ Y = Σ (fst (X ⊙→ Y)) (λ {(f , _) → is-equiv f})
 
-infixr 4 _⊙∘_
+⊙ify-eq : ∀ {i j} {X : Ptd i} {Y : Ptd j}
+  (e : fst X ≃ fst Y) (p : –> e (snd X) == snd Y)
+  → X ⊙≃ Y
+⊙ify-eq (f , ie) p = ((f , p) , ie)
+
+infixr 0 _⊙→_ _⊙≃_
+
+infixr 80 _⊙∘_
 
 ⊙idf : ∀ {i} (X : Ptd i) → fst (X ⊙→ X)
 ⊙idf A = ((λ x → x) , idp)
@@ -49,22 +57,18 @@ _⊙∘_ : ∀ {i j k} {X : Ptd i} {Y : Ptd j} {Z : Ptd k}
           ap (h ∘ g) fpt ∙ ap h gpt ∙ hpt == ap h (ap g fpt ∙ gpt) ∙ hpt
   lemma idp gpt hpt = idp
 
+⊙Σ : ∀ {i j} (X : Ptd i) → (fst X → Ptd j) → Ptd (lmax i j)
+⊙Σ (A , a₀) Y = ⊙[ Σ A (fst ∘ Y) , (a₀ , snd (Y a₀)) ]
+
+infixr 80 _⊙×_
 _⊙×_ : ∀ {i j} → Ptd i → Ptd j → Ptd (lmax i j)
-(A , a₀) ⊙× (B , b₀) = (A × B , (a₀ , b₀))
+X ⊙× Y = ⊙Σ X (λ _ → Y)
 
-⊙comp2 : ∀ {i j k l} {X : Ptd i} {Y : Ptd j} {Z : Ptd k} {W : Ptd l}
-  → fst (Y ⊙× Z ⊙→ W) → fst (X ⊙→ Y) → fst (X ⊙→ Z) → fst (X ⊙→ W)
-⊙comp2 (o , opt) (f , fpt) (g , gpt) =
-  (λ x → o (f x , g x)) , ap2 (curry o) fpt gpt ∙' opt
-
-⊙comp2-pre∘ : ∀ {i j k l m} {X₁ : Ptd i} {X₂ : Ptd j} (f : fst (X₁ ⊙→ X₂))
-  {Y : Ptd k} {Z : Ptd l} {W : Ptd m}
-  (o : fst (Y ⊙× Z ⊙→ W)) (g : fst (X₂ ⊙→ Y)) (h : fst (X₂ ⊙→ Z))
-  → ⊙comp2 o g h ⊙∘ f == ⊙comp2 o (g ⊙∘ f) (h ⊙∘ f)
-⊙comp2-pre∘ (f , idp) (o , idp) (g , idp) (h , idp) = idp
+⊙dfst : ∀ {i j} {X : Ptd i} (Y : fst X → Ptd j) → fst (⊙Σ X Y ⊙→ X)
+⊙dfst Y = (fst , idp)
 
 ⊙fst : ∀ {i j} {X : Ptd i} {Y : Ptd j} → fst (X ⊙× Y ⊙→ X)
-⊙fst = (fst , idp)
+⊙fst = ⊙dfst _
 
 ⊙snd : ∀ {i j} {X : Ptd i} {Y : Ptd j} → fst (X ⊙× Y ⊙→ Y)
 ⊙snd = (snd , idp)
@@ -74,7 +78,7 @@ _⊙×_ : ∀ {i j} → Ptd i → Ptd j → Ptd (lmax i j)
 
 ⊙×-in : ∀ {i j k} {X : Ptd i} {Y : Ptd j} {Z : Ptd k}
   → fst (X ⊙→ Y) → fst (X ⊙→ Z) → fst (X ⊙→ Y ⊙× Z)
-⊙×-in = ⊙comp2 (uncurry _,_ , idp)
+⊙×-in (f , fpt) (g , gpt) = (λ x → (f x , g x)) , ap2 _,_ fpt gpt
 
 ⊙fst-⊙×-in : ∀ {i j k} {X : Ptd i} {Y : Ptd j} {Z : Ptd k}
   (f : fst (X ⊙→ Y)) (g : fst (X ⊙→ Z))
@@ -86,16 +90,16 @@ _⊙×_ : ∀ {i j} → Ptd i → Ptd j → Ptd (lmax i j)
   → ⊙snd ⊙∘ ⊙×-in f g == g
 ⊙snd-⊙×-in (f , idp) (g , idp) = idp
 
+⊙×-in-pre∘ : ∀ {i j k l} {X : Ptd i} {Y : Ptd j} {Z : Ptd k} {W : Ptd l}
+  (f : fst (Y ⊙→ Z)) (g : fst (Y ⊙→ W)) (h : fst (X ⊙→ Y))
+  → ⊙×-in f g ⊙∘ h == ⊙×-in (f ⊙∘ h) (g ⊙∘ h)
+⊙×-in-pre∘ (f , idp) (g , idp) (h , idp) = idp
+
 pair⊙→ : ∀ {i j k l} {X : Ptd i} {Y : Ptd j} {Z : Ptd k} {W : Ptd l}
   → fst (X ⊙→ Y) → fst (Z ⊙→ W)
   → fst ((X ⊙× Z) ⊙→ (Y ⊙× W))
 pair⊙→ (f , fpt) (g , gpt) =
   ((λ {(x , z) → (f x , g z)}) , pair×= fpt gpt)
-
-{- Obtaining equality of pointed types from an equivalence -}
-⊙ua : ∀ {i} {A B : Type i} {a₀ : A} {b₀ : B}
-  (e : A ≃ B) → –> e a₀ == b₀ → ⊙[ A , a₀ ] == ⊙[ B , b₀ ]
-⊙ua e p = pair= (ua e) (↓-idf-ua-in e p)
 
 {- ⊙→ preserves hlevel -}
 ⊙→-level : ∀ {i j} {X : Ptd i} {Y : Ptd j} {n : ℕ₋₂}
@@ -109,12 +113,19 @@ pair⊙→ (f , fpt) (g , gpt) =
 ⊙λ= {g = g} p α =
   pair= (λ= p) (↓-app=cst-in (α ∙ ap (λ w → w ∙ snd g) (! (app=-β p _))))
 
-{- Obtaining pointed maps from an pointed equivalence -}
-module _ {i j} {X : Ptd i} {Y : Ptd j} (e : fst X ≃ fst Y)
-  (p : –> e (snd X) == snd Y) where
+{- Extracting data from an pointed equivalence -}
+module _ {i j} {X : Ptd i} {Y : Ptd j} (⊙e : X ⊙≃ Y) where
+
+  private
+    e : fst X ≃ fst Y
+    e = (fst (fst ⊙e) , snd ⊙e)
+
+    p = snd (fst ⊙e)
+
+  ⊙≃-to-≃ = e
 
   ⊙–> : fst (X ⊙→ Y)
-  ⊙–> = (–> e , p)
+  ⊙–> = fst ⊙e
 
   ⊙<– : fst (Y ⊙→ X)
   ⊙<– = (<– e , ap (<– e) (! p) ∙ <–-inv-l e (snd X))
@@ -151,3 +162,7 @@ module _ {i j} {X : Ptd i} {Y : Ptd j} (e : fst X ≃ fst Y)
       (p : ∀ z → f z == z) {x y : A} (q : x == y)
       → (ap f (! q) ∙ p x) ∙ q == p y
     htpy-lemma p idp = ∙-unit-r _
+
+{- Equality of pointed types -}
+⊙ua : ∀ {i} {X Y : Ptd i} → X ⊙≃ Y → X == Y
+⊙ua ((f , p) , ie) = pair= (ua (f , ie)) (↓-idf-ua-in (f , ie) p)

@@ -1,12 +1,12 @@
 {-# OPTIONS --without-K #-}
 
 open import HoTT
-open import lib.cubical.elims.CofWedge
-open import lib.cubical.elims.SuspSmash
+open import homotopy.elims.SuspSmash
+open import homotopy.elims.CofPushoutSection
 
-{- Σ(X∧Y) ≃ X * Y -}
+-- Σ(X∧Y) ≃ X * Y
 
-module homotopy.SuspSmash {i j} (X : Ptd i) (Y : Ptd j) where
+module homotopy.SuspSmash {i} (X Y : Ptd i) where
 
 private
 
@@ -24,7 +24,7 @@ private
     {C = fst (X ⊙* Y)}
     (left (snd X))
     (right (snd Y))
-    (cof-wedge-path-rec
+    (CofPushoutSection.rec _ (λ _ → tt) (λ _ → idp)
       (glue (snd X , snd Y))
       (λ {(x , y) →
         glue (snd X , snd Y) ∙ ! (glue (x , snd Y))
@@ -60,12 +60,11 @@ private
       vert-degen-square (∙-unit-r s)
 
   out-into : (σ : Suspension (Smash X Y)) → out (into σ) == σ
-  out-into = susp-smash-path-elim (out ∘ into) (idf _)
+  out-into = susp-smash-elim
     idp
     idp
-    (λ {(x , y) → vert-degen-square $
-      ap-∘ out into (merid _ (cfcod _ (x , y)))
-      ∙ ap (ap out) (Into.glue-β (cfcod _ (x , y)))
+    (↓-∘=idf-in out into ∘ λ {(x , y) →
+      ap (ap out) (Into.glue-β (cfcod _ (x , y)))
       ∙ lemma₁ out (Out.glue-β (snd X , snd Y))
                    (Out.glue-β (x , snd Y))
                    (Out.glue-β (x , y))
@@ -77,8 +76,7 @@ private
                {s = merid _ (cfcod _ (snd X , y))}
                {t = merid _ (cfcod _ (snd X , snd Y))}
           (ap (merid _) (! (cfglue _ (winl (snd X))) ∙ cfglue _ (winl x)))
-          (ap (merid _) (! (cfglue _ (winr y)) ∙ cfglue _ (winr (snd Y))))
-      ∙ ! (ap-idf (merid _ (cfcod _ (x , y))))})
+          (ap (merid _) (! (cfglue _ (winr y)) ∙ cfglue _ (winr (snd Y))))})
     where
     lemma₁ : ∀ {i j} {A : Type i} {B : Type j} (f : A → B)
       {x y z u v w : A}
@@ -107,5 +105,5 @@ module SuspSmash where
   path : Suspension (Smash X Y) == fst (X ⊙* Y)
   path = ua eq
 
-  ⊙path : ⊙Susp (⊙Smash X Y) == X ⊙* Y
-  ⊙path = ⊙ua eq idp
+  ⊙path : ⊙Susp (⊙Smash X Y) == (X ⊙* Y)
+  ⊙path = ⊙ua (⊙ify-eq eq idp)

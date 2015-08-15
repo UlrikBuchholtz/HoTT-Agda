@@ -8,7 +8,7 @@ module lib.types.Sigma where
 _×_ : ∀ {i j} (A : Type i) (B : Type j) → Type (lmax i j)
 A × B = Σ A (λ _ → B)
 
-infixr 5 _×_
+infixr 80 _×_
 
 module _ {i j} {A : Type i} {B : A → Type j} where
 
@@ -274,6 +274,24 @@ module _ {i j k} {A : Type i} {B : A → Type j} {C : A → Type k}
     → s == s' [ C ↓ p ]
     → (r , s) == (r' , s') [ (λ x → B x × C x) ↓ p ]
   ↓-×-in {p = idp} q t = pair×= q t
+
+{- Dependent paths over a ×-type -}
+module _ {i j k} {A : Type i} {B : Type j} (C : A → B → Type k)
+  where
+
+  ↓-over-×-in : {x x' : A} {p : x == x'} {y y' : B} {q : y == y'}
+    {u : C x y} {v : C x' y} {w : C x' y'}
+    → u == v [ (λ a → C a y) ↓ p ]
+    → v == w [ (λ b → C x' b) ↓ q ]
+    → u == w [ uncurry C ↓ pair×= p q ]
+  ↓-over-×-in {p = idp} {q = idp} idp idp = idp
+
+  ↓-over-×-in' : {x x' : A} {p : x == x'} {y y' : B} {q : y == y'}
+    {u : C x y} {v : C x y'} {w : C x' y'}
+    → u == v [ (λ b → C x b) ↓ q ]
+    → v == w [ (λ a → C a y') ↓ p ]
+    → u == w [ uncurry C ↓ pair×= p q ]
+  ↓-over-×-in' {p = idp} {q = idp} idp idp = idp
 
 module _ where
   -- An orphan lemma.

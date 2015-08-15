@@ -28,6 +28,7 @@ module lib.groups.GroupProduct where
   invr = λ {(g , h) → pair×= (invr GS g) (invr HS h)}}
   where open GroupStructure
 
+infix 80 _×ᴳ_
 _×ᴳ_ : ∀ {i j} → Group i → Group j → Group (lmax i j)
 _×ᴳ_ (group A A-level A-struct) (group B B-level B-struct) =
   group (A × B) (×-level A-level B-level) (×-group-struct A-struct B-struct)
@@ -63,12 +64,24 @@ _×ᴳ_ (group A A-level A-struct) (group B B-level B-struct) =
   → (∀ i → is-abelian (F i)) → is-abelian (Πᴳ I F)
 Πᴳ-abelian aF f₁ f₂ = λ= (λ i → aF i (f₁ i) (f₂ i))
 
-{- defining a homomorphism into a binary product -}
+{- defining a homomorphism into a product -}
 ×ᴳ-hom-in : ∀ {i j k} {G : Group i} {H : Group j} {K : Group k}
   → (G →ᴳ H) → (G →ᴳ K) → (G →ᴳ H ×ᴳ K)
 ×ᴳ-hom-in (group-hom h h-comp) (group-hom k k-comp) = record {
   f = λ x → (h x , k x);
   pres-comp = λ x y → pair×= (h-comp x y) (k-comp x y)}
+
+Πᴳ-hom-in : ∀ {i j k} {I : Type i} {G : Group j} {F : I → Group k}
+  → ((i : I) → G →ᴳ F i) → (G →ᴳ Πᴳ I F)
+Πᴳ-hom-in h = record {
+  f = λ x i → GroupHom.f (h i) x;
+  pres-comp = λ x y → λ= (λ i → GroupHom.pres-comp (h i) x y)}
+
+×ᴳ-hom-in-pre∘ : ∀ {i j k l}
+  {G : Group i} {H : Group j} {K : Group k} {J : Group l}
+  (φ : G →ᴳ H) (ψ : G →ᴳ K) (χ : J →ᴳ G)
+  → ×ᴳ-hom-in φ ψ ∘ᴳ χ == ×ᴳ-hom-in (φ ∘ᴳ χ) (ψ ∘ᴳ χ)
+×ᴳ-hom-in-pre∘ φ ψ χ = hom= _ _ idp
 
 {- projection homomorphisms -}
 ×ᴳ-fst : ∀ {i j} {G : Group i} {H : Group j} → (G ×ᴳ H →ᴳ G)
@@ -120,7 +133,9 @@ module _ {i j k} {G : Group i} {H : Group j} {K : Group k}
        g₁ □ (g₃ □ (g₂ □ g₄))
          =⟨ ! (G.assoc g₁ g₃ (g₂ □ g₄)) ⟩
        (g₁ □ g₃) □ (g₂ □ g₄) ∎
-       where _□_ = G.comp
+       where
+        infix 80 _□_
+        _□_ = G.comp
 
   ×ᴳ-sum-hom : (H →ᴳ G) → (K →ᴳ G) → (H ×ᴳ K →ᴳ G)
   ×ᴳ-sum-hom φ ψ = record {
@@ -211,6 +226,7 @@ module _ {i} (Pick : Lift {j = i} Bool → Group i) where
 
 module _ {i} where
 
+  infixl 80 _^ᴳ_
   _^ᴳ_ : Group i → ℕ → Group i
   H ^ᴳ O = 0ᴳ
   H ^ᴳ (S n) = H ×ᴳ (H ^ᴳ n)
