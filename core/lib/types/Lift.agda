@@ -20,8 +20,8 @@ lift-equiv = equiv lift lower (λ _ → idp) (λ _ → idp)
 
 instance
   Lift-level : ∀ {i j} {A : Type i} {n : ℕ₋₂}
-    → has-level n A → has-level n (Lift {j = j} A)
-  Lift-level p = equiv-preserves-level lift-equiv {{p}}
+    → {{p : has-level n A}} → has-level n (Lift {j = j} A)
+  Lift-level = equiv-preserves-level lift-equiv
 
 ⊙lift-equiv : ∀ {i j} {X : Ptd i} → X ⊙≃ ⊙Lift {j = j} X
 ⊙lift-equiv = (⊙lift , snd lift-equiv)

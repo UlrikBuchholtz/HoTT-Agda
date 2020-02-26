@@ -45,10 +45,10 @@ open _=⊙∘_ public
   {n : ℕ₋₂}
   → has-level n (de⊙ Y)
   → has-level n (X ⊙→ Y)
-⊙→-level X Y Y-level =
-  Σ-level
-    (Π-level (λ _ → Y-level))
-    (λ f' → =-preserves-level Y-level)
+⊙→-level X Y Y-level = Σ-level {{⟨⟩}} {{λ {f} → =-preserves-level}} where instance _ = Y-level
+--  Σ-level
+--    (Π-level (λ _ → Y-level))
+--    (λ f' → =-preserves-level Y-level)
 
 ⊙app= : ∀ {i j} {X : Ptd i} {Y : Ptd j} {f g : X ⊙→ Y}
   → f == g → f ⊙∼ g

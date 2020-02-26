@@ -203,14 +203,18 @@ private
   take-drop-split' (S n) ⊙idf-seq = idp
   take-drop-split' (S n) (f ◃⊙∘ fs) = ap (f ◃⊙∘_) (take-drop-split' n fs)
 
-  take-drop-split : ∀ {i} {X Y : Ptd i} (n : ℕ) (s : X ⊙–→ Y)
-    → ⊙compose s ◃⊙idf =⊙∘ ⊙compose (take n s) ◃⊙∘ ⊙compose (drop n s) ◃⊙idf
+  take-drop-split : ∀ {i} {X Y : Ptd i} (n : ℕ) (fs : X ⊙–→ Y)
+    → ⊙compose fs ◃⊙idf =⊙∘ ⊙compose (take n fs) ◃⊙∘ (⊙compose (drop n fs) ◃⊙idf)
   take-drop-split n fs = =⊙∘-in $
+    ⊙compose (⊙compose fs ◃⊙idf)
+      =⟨ ⊙λ= ((λ x → idp) , idp) ⟩
     ⊙compose fs
       =⟨ ap ⊙compose (take-drop-split' n fs) ⟩
     ⊙compose (take n fs ⊙∘∘ drop n fs)
       =⟨ ⊙compose-⊙∘∘ (take n fs) (drop n fs) ⟩
-    ⊙compose (take n fs) ⊙∘ ⊙compose (drop n fs) =∎
+    ⊙compose (take n fs) ⊙∘ ⊙compose (drop n fs)
+      =⟨ ⊙λ= ((λ x → idp) , idp) ⟩
+    ⊙compose (⊙compose (take n fs) ◃⊙∘ ⊙compose (drop n fs) ◃⊙idf) =∎
 
 abstract
   private
@@ -224,7 +228,9 @@ abstract
       → ⊙compose fs == f
     _⊙compose=⟨_&_&_&_⟩_ {f = f} fs n m gs p p' =
       ⊙compose fs
-        =⟨ =⊙∘-out (take-drop-split n fs) ⟩
+        =⟨ ap ⊙compose (take-drop-split' n fs) ⟩
+      ⊙compose (take n fs ⊙∘∘ drop n fs)
+        =⟨ ⊙compose-⊙∘∘ (take n fs) (drop n fs) ⟩
       ⊙compose (take n fs) ⊙∘ ⊙compose (drop n fs)
         =⟨ ap (⊙compose (take n fs) ⊙∘_) (=⊙∘-out (take-drop-split m (drop n fs))) ⟩
       ⊙compose (take n fs) ⊙∘ ⊙compose (take m (drop n fs)) ⊙∘ ⊙compose (drop m (drop n fs))
@@ -259,7 +265,7 @@ abstract
     → ⊙compose fs == h
     → h ◃⊙idf =⊙∘ gs
     → fs =⊙∘ gs
-  _=⊙∘₁⟨_⟩_ fs p p' = =⊙∘-in p ∙⊙∘ p'
+  fs =⊙∘₁⟨ idp ⟩ p' = =⊙∘-in (⊙λ= ((λ x → idp) , idp) ∙ =⊙∘-out p')
 
   infixr 10 _=⊙∘₁⟨_&_&_⟩_
   _=⊙∘₁⟨_&_&_⟩_ : ∀ {i} {X Y : Ptd i} (fs : X ⊙–→ Y) {gs : X ⊙–→ Y}

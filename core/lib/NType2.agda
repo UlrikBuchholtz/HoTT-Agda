@@ -14,10 +14,10 @@ module _ {i} {A : Type i} where
   abstract
     has-dec-onesided-eq-is-prop : {x : A} → is-prop (has-dec-onesided-eq x)
     has-dec-onesided-eq-is-prop {x = x} = inhab-to-prop-is-prop λ dec →
-      Π-level λ y → Dec-level (dec-onesided-eq-is-prop x dec y)
+      Π-level {{ λ {y} → Dec-level {{ dec-onesided-eq-is-prop x dec y }} }}
 
     has-dec-eq-is-prop : is-prop (has-dec-eq A)
-    has-dec-eq-is-prop = Π-level (λ _ → has-dec-onesided-eq-is-prop)
+    has-dec-eq-is-prop = Π-level {{ λ {_} → has-dec-onesided-eq-is-prop}}
 
 
 module _ {i j} {A : Type i} {B : A → Type j} where
@@ -28,7 +28,7 @@ module _ {i j} {A : Type i} {B : A → Type j} where
 
     ↓-preserves-level : {a b : A} {p : a == b} {u : B a} {v : B b} {n : ℕ₋₂}
       → has-level n (B b) → has-level n (u == v [ B ↓ p ])
-    ↓-preserves-level {p = idp} = =-preserves-level
+    ↓-preserves-level {p = idp} pB = =-preserves-level {{pB}}
 
     prop-has-all-paths-↓ : {x y : A} {p : x == y} {u : B x} {v : B y}
       {{_ : is-prop (B y)}} → u == v [ B ↓ p ]
@@ -71,7 +71,7 @@ abstract
   has-level-is-prop {n = S n} {A} = equiv-preserves-level e {{has-level-aux-prop}} where
 
     has-level-aux-prop : is-prop (has-level-aux (S n) A)
-    has-level-aux-prop = Π-level (λ x → Π-level (λ y → has-level-is-prop))
+    has-level-aux-prop = Π-level {{λ {x} → Π-level {{λ {y} → has-level-is-prop}} }}
 
     e : has-level-aux (S n) A ≃ has-level (S n) A
     fst e = has-level-in
@@ -94,9 +94,9 @@ module _ {i j} {A : Type i} (P : SubtypeProp A j) where
 
   instance
     Subtype-level : ∀ {n : ℕ₋₂}
-      {{_ : has-level (S n) A}}
+      {{pA : has-level (S n) A}}
       → has-level (S n) (Subtype P)
-    Subtype-level = Σ-level ⟨⟩ (λ x → prop-has-level-S (P.level x))
+    Subtype-level {{pA}} = Σ-level {{pA}} {{λ {x} → prop-has-level-S (P.level x)}}
 
   Subtype= : (x y : Subtype P) → Type i
   Subtype= x y = fst x == fst y
@@ -176,13 +176,13 @@ abstract
 
 instance
   ≃-level : ∀ {i j} {n : ℕ₋₂} {A : Type i} {B : Type j}
-    → (has-level n A → has-level n B → has-level n (A ≃ B))
-  ≃-level {n = ⟨-2⟩} = ≃-contr
-  ≃-level {n = S n} pA pB = Σ-level ⟨⟩ ⟨⟩ where instance _ = pA; _ = pB
+    → {{pA : has-level n A}} → {{pB : has-level n B}} → has-level n (A ≃ B)
+  ≃-level {n = ⟨-2⟩} {{pA}} {{pB}} = ≃-contr pA pB
+  ≃-level {n = S n} = Σ-level
 
   universe-=-level : ∀ {i} {n : ℕ₋₂} {A B : Type i}
-    → (has-level n A → has-level n B → has-level n (A == B))
-  universe-=-level pA pB = equiv-preserves-level ua-equiv where instance _ = pA; _ = pB
+    → {{pA : has-level n A}} → {{pB : has-level n B}} → has-level n (A == B)
+  universe-=-level = equiv-preserves-level ua-equiv {{ ≃-level }}
 
 module _ {i} {n} where
   private
@@ -214,13 +214,13 @@ module _ {i} {n} where
     nType-∙ = Subtype-∙ prop
 
 abstract
- instance
   _-Type-level_ : (n : ℕ₋₂) (i : ULevel)
     → has-level (S n) (n -Type i)
   (n -Type-level i) = has-level-in (λ { (A , pA) (B , pB) → aux A B pA pB}) where
 
     aux : (A B : Type i) (pA : has-level n A) (pB : has-level n B) → has-level n ((A , pA) == (B , pB))
-    aux A B pA pB = equiv-preserves-level (nType=-econv (A , ⟨⟩) (B , ⟨⟩)) where instance _ = pA; _ = pB
+    aux A B pA pB = equiv-preserves-level (nType=-econv (A , ⟨⟩) (B , ⟨⟩)) {{ universe-=-level }}
+      where instance _ = pA; _ = pB
 
 hProp-is-set : (i : ULevel) → is-set (hProp i)
 hProp-is-set i = -1 -Type-level i

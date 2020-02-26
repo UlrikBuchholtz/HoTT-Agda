@@ -44,7 +44,7 @@ is-contr-map {A = A} {B = B} f = (y : B) → is-contr (hfiber f y)
 equiv-is-contr-map : ∀ {i j} {A : Type i} {B : Type j} {f : A → B}
   → (is-equiv f → is-contr-map f)
 equiv-is-contr-map e y =
-   equiv-preserves-level (Σ-emap-l (_== y) (_ , e) ⁻¹)
+   equiv-preserves-level (Σ-emap-l (_== y) (_ , e) ⁻¹) {{ pathto-is-contr }}
 
 contr-map-is-equiv : ∀ {i j} {A : Type i} {B : Type j} {f : A → B}
   → (is-contr-map f → is-equiv f)
@@ -109,7 +109,7 @@ module _ {i j} {A : Type i} {B : Type j} {f : A → B} where
 equiv-rcoh-is-contr : ∀ {i j} {A : Type i} {B : Type j} {f : A → B}
                       (e : is-equiv f) → (v : rinv f) → is-contr (rcoh f v)
 equiv-rcoh-is-contr {f = f} e v = equiv-preserves-level ((rcoh-econv v)⁻¹)
-  {{Π-level (λ x → =-preserves-level (equiv-is-contr-map e (f x)))}}
+  {{Π-level {{ λ {x} → =-preserves-level {{ equiv-is-contr-map e (f x) }} }} }}
 
 rinv-and-rcoh-is-equiv : ∀ {i j} {A : Type i} {B : Type j} {h : A → B}
   → Σ (rinv h) (rcoh h) ≃ is-equiv h
@@ -125,7 +125,7 @@ abstract
     → is-prop (is-equiv f)
   is-equiv-is-prop = inhab-to-contr-is-prop λ e →
     equiv-preserves-level rinv-and-rcoh-is-equiv
-      {{Σ-level (equiv-rinv-is-contr e) (equiv-rcoh-is-contr e)}}
+      {{ Σ-level {{ equiv-rinv-is-contr e }} {{ λ {x} → equiv-rcoh-is-contr e x }} }}
 
   instance
     is-equiv-level : ∀ {i j} {A : Type i} {B : Type j} {f : A → B} {n : ℕ₋₂}

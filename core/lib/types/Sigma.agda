@@ -144,19 +144,19 @@ module _ {i j} {A : Type i} {B : A → Type j} where
 
 instance
   Σ-level : ∀ {i j} {n : ℕ₋₂} {A : Type i} {P : A → Type j}
-    → has-level n A → ((x : A) → has-level n (P x))
+    → {{p : has-level n A}} → {{q : {x : A} → has-level n (P x)}}
       → has-level n (Σ A P)
-  Σ-level {n = ⟨-2⟩} p q = has-level-in ((contr-center p , (contr-center (q (contr-center p)))) , lemma)
-    where abstract lemma = λ y → pair= (contr-path p _) (from-transp! _ _ (contr-path (q _) _))
-  Σ-level {n = S n} p q = has-level-in lemma where
+  Σ-level {n = ⟨-2⟩} {{p}} {{q}} = has-level-in ((contr-center p , (contr-center (q {contr-center p}))) , lemma)
+    where abstract lemma = λ y → pair= (contr-path p _) (from-transp! _ _ (contr-path q _))
+  Σ-level {n = S n} {{p}} {{q}} = has-level-in lemma where
     abstract
       lemma = λ x y → equiv-preserves-level (=Σ-econv x y)
-        {{Σ-level (has-level-apply p _ _) (λ _ →
-          equiv-preserves-level ((to-transp-equiv _ _)⁻¹) {{has-level-apply (q _) _ _}})}}
+        {{Σ-level {{has-level-apply p _ _}} {{λ {_} → 
+          equiv-preserves-level ((to-transp-equiv _ _)⁻¹) {{has-level-apply q _ _}} }} }}
 
 ×-level : ∀ {i j} {n : ℕ₋₂} {A : Type i} {B : Type j}
   → (has-level n A → has-level n B → has-level n (A × B))
-×-level pA pB = Σ-level pA (λ x → pB)
+×-level pA pB = Σ-level {{pA}} {{pB}}
 
 -- Equivalences in a Σ-type
 
